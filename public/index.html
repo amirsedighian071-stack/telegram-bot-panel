@@ -59,6 +59,12 @@
     @keyframes pulseDot { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
     .live-dot { animation: pulseDot 1.6s ease-in-out infinite; }
 
+    .bp-sec-body { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .28s ease; }
+    .bp-sec-inner { overflow: hidden; min-height: 0; }
+    .bp-sec:not(.open) .bp-sec-body { grid-template-rows: 0fr; }
+    .bp-sec .chev { transition: transform .28s ease; }
+    .bp-sec.open .chev { transform: rotate(180deg); }
+
     html, body { overflow-x: clip; }
     @supports not (overflow: clip) { html, body { overflow-x: hidden; } }
 
@@ -273,6 +279,7 @@
       confirmDelWh: 'وب‌هوک حذف شود؟ ربات پیام‌ها را دریافت نخواهد کرد.',
       webhookSetOk: 'وب‌هوک با موفقیت تنظیم شد', webhookDelOk: 'وب‌هوک حذف شد',
       panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تیره', light: 'روشن', themeOcean: 'اقیانوس', themeViolet: 'بنفش', language: 'زبان',
+      expandAll: 'باز کردن همه', collapseAll: 'بستن همه',
       version: 'نسخه',
     },
     en: {
@@ -357,6 +364,7 @@
       confirmDelWh: 'Delete the webhook? The bot will stop receiving updates.',
       webhookSetOk: 'Webhook configured successfully', webhookDelOk: 'Webhook deleted',
       panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', themeOcean: 'Ocean', themeViolet: 'Violet', language: 'Language',
+      expandAll: 'Expand all', collapseAll: 'Collapse all',
       version: 'Version',
     },
   };
@@ -1599,11 +1607,43 @@
       '<span class="w-6 h-6 rounded-lg" style="background:' + accent + '"></span></span>' +
       '<span class="flex items-center gap-1 font-bold"><i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i>' + label + '</span></button>';
   }
+  const SEC_IDS = ['general', 'security', 'channel', 'webhook', 'tuning', 'prefs'];
+  function secOpen(id) {
+    try {
+      const s = JSON.parse(localStorage.getItem('bp_setsec') || '{}');
+      if (s && typeof s[id] === 'boolean') return s[id];
+    } catch (e) {}
+    return id === 'general';
+  }
+  function secSet(id, open) {
+    let s = {};
+    try { s = JSON.parse(localStorage.getItem('bp_setsec') || '{}') || {}; } catch (e) {}
+    s[id] = !!open;
+    try { localStorage.setItem('bp_setsec', JSON.stringify(s)); } catch (e) {}
+  }
+  function secCard(id, icon, title, inner) {
+    const open = secOpen(id);
+    return '<section data-sec="' + id + '" class="bp-sec ' + CLS.card + ' overflow-hidden' + (open ? ' open' : '') + '">' +
+      '<button data-act="secToggle" data-sec="' + id + '" aria-expanded="' + open + '" aria-controls="sec-' + id + '" class="w-full flex items-center gap-2 p-5 md:p-6 text-start cursor-pointer">' +
+      '<i data-lucide="' + icon + '" class="w-4 h-4 text-brand-500 shrink-0"></i>' +
+      '<span class="font-bold text-sm flex-1">' + title + '</span>' +
+      '<i data-lucide="chevron-down" class="chev w-4 h-4 text-slate-400 shrink-0"></i></button>' +
+      '<div id="sec-' + id + '" class="bp-sec-body"><div class="bp-sec-inner"><div class="px-5 md:px-6 pb-5 md:pb-6">' + inner + '</div></div></div></section>';
+  }
+  function paintSecAll() {
+    const btn = $('sec-all-btn');
+    if (!btn) return;
+    const boxes = Array.prototype.slice.call(document.querySelectorAll('section.bp-sec'));
+    const allOpen = boxes.length > 0 && boxes.every((b) => b.classList.contains('open'));
+    btn.textContent = allOpen ? t('collapseAll') : t('expandAll');
+  }
   function renderSettings() {
+    const allOpen = SEC_IDS.every(secOpen);
     $('view').innerHTML =
+      '<div class="flex justify-end mb-3 px-1">' +
+      '<button id="sec-all-btn" data-act="secAll" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">' + (allOpen ? t('collapseAll') : t('expandAll')) + '</button></div>' +
       '<div class="grid lg:grid-cols-2 gap-4 items-start">' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-5"><i data-lucide="bot" class="w-4 h-4 text-brand-500"></i>' + t('botSettings') + '</h3>' +
+      secCard('general', 'bot', t('botSettings'),
       '<div class="mb-4"><label class="' + CLS.label + '">' + t('botToken') + '</label>' +
       '<p id="st-token-cur" class="text-xs mb-2 break-all"></p>' +
       '<input id="st-token-in" dir="ltr" type="password" autocomplete="off" placeholder="123456:ABC-DEF…" class="' + CLS.input + '">' +
@@ -1621,11 +1661,10 @@
       '<div class="grid sm:grid-cols-2 gap-3 mt-3">' +
       '<input id="st-sb-fa" maxlength="64" placeholder="' + t('sbFaPh') + '" class="' + CLS.input + '">' +
       '<input id="st-sb-en" dir="ltr" maxlength="64" placeholder="' + t('sbEnPh') + '" class="' + CLS.input + '"></div></div>' +
-      '<button data-act="saveGeneral" class="' + CLS.btnP + '"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button></div>' +
+      '<button data-act="saveGeneral" class="' + CLS.btnP + '"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button>') +
 
       '<div class="space-y-4">' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="key-round" class="w-4 h-4 text-brand-500"></i>' + t('security') + '</h3>' +
+      secCard('security', 'key-round', t('security'),
       '<div class="space-y-3">' +
       '<div><label class="' + CLS.label + '">' + t('currentPw') + '</label>' +
       '<input id="st-cur-pw" type="password" autocomplete="current-password" class="' + CLS.input + '"></div>' +
@@ -1635,9 +1674,8 @@
       '<div><label class="' + CLS.label + '">' + t('newPw2') + '</label>' +
       '<input id="st-new-pw2" type="password" autocomplete="new-password" class="' + CLS.input + '"></div></div>' +
       '<p class="text-[11px] text-slate-400">' + t('sessionsNote') + '</p></div>' +
-      '<button data-act="changePw" class="' + CLS.btnP + ' mt-4"><i data-lucide="key-round" class="w-4 h-4"></i>' + t('changePw') + '</button></div>' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="lock" class="w-4 h-4 text-brand-500"></i>' + t('channelLock') + '</h3>' +
+      '<button data-act="changePw" class="' + CLS.btnP + ' mt-4"><i data-lucide="key-round" class="w-4 h-4"></i>' + t('changePw') + '</button>') +
+      secCard('channel', 'lock', t('channelLock'),
       '<label class="flex items-center gap-2.5 mb-4 text-sm cursor-pointer">' +
       '<input id="st-ch-on" type="checkbox" class="w-4 h-4 accent-brand-500">' + t('chEnable') + '</label>' +
       '<div class="mb-3"><label class="' + CLS.label + '">' + t('chId') + '</label>' +
@@ -1645,21 +1683,18 @@
       '<div class="mb-3"><label class="' + CLS.label + '">' + t('chUrl') + '</label>' +
       '<input id="st-ch-url" dir="ltr" placeholder="https://t.me/…" class="' + CLS.input + '"></div>' +
       '<p class="text-[11px] text-slate-400">' + t('chHint') + '</p>' +
-      '<button data-act="saveChannel" class="' + CLS.btnP + ' mt-4"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button></div>' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="webhook" class="w-4 h-4 text-brand-500"></i>' + t('webhookMgmt') + '</h3>' +
+      '<button data-act="saveChannel" class="' + CLS.btnP + ' mt-4"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button>') +
+      secCard('webhook', 'webhook', t('webhookMgmt'),
       '<div id="st-wh-box" class="mb-4"><div class="py-4 text-center text-slate-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block"></i></div></div>' +
       '<div class="flex gap-2">' +
       '<button data-act="setWebhook" data-action="set" class="' + CLS.btnP + '"><i data-lucide="plug-zap" class="w-4 h-4"></i>' + t('setWebhook') + '</button>' +
-      '<button data-act="setWebhook" data-action="delete" class="' + CLS.btnS + ' text-rose-500"><i data-lucide="unplug" class="w-4 h-4"></i>' + t('delWebhook') + '</button></div></div>' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="gauge" class="w-4 h-4 text-brand-500"></i>' + t('broadcastTuning') + '</h3>' +
+      '<button data-act="setWebhook" data-action="delete" class="' + CLS.btnS + ' text-rose-500"><i data-lucide="unplug" class="w-4 h-4"></i>' + t('delWebhook') + '</button></div>') +
+      secCard('tuning', 'gauge', t('broadcastTuning'),
       '<div class="grid grid-cols-2 gap-3">' +
       '<div><label class="' + CLS.label + '">' + t('batchSize') + '</label><input id="st-batch" type="number" min="1" max="50" class="' + CLS.input + '"></div>' +
       '<div><label class="' + CLS.label + '">' + t('delayMs') + '</label><input id="st-delay" type="number" min="20" max="500" step="10" class="' + CLS.input + '"></div></div>' +
-      '<button data-act="saveTuning" class="' + CLS.btnS + ' mt-4"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button></div>' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-500"></i>' + t('panelPrefs') + '</h3>' +
+      '<button data-act="saveTuning" class="' + CLS.btnS + ' mt-4"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button>') +
+      secCard('prefs', 'sliders-horizontal', t('panelPrefs'),
       '<div class="space-y-4">' +
       '<div><span class="' + CLS.label + '">' + t('appearance') + '</span>' +
       '<div class="grid grid-cols-2 gap-2">' +
@@ -1671,7 +1706,7 @@
       '<div><span class="' + CLS.label + '">' + t('language') + '</span>' +
       '<div class="flex gap-2">' +
       '<button data-act="setLang" data-v="fa" class="preflang ' + CLS.btnS + ' flex-1 !py-2 text-xs">فارسی</button>' +
-      '<button data-act="setLang" data-v="en" class="preflang ' + CLS.btnS + ' flex-1 !py-2 text-xs">English</button></div></div></div></div>' +
+      '<button data-act="setLang" data-v="en" class="preflang ' + CLS.btnS + ' flex-1 !py-2 text-xs">English</button></div></div></div>') +
       '</div></div>';
 
     refreshIcons();
@@ -1747,6 +1782,27 @@
       document.documentElement.lang = d.v;
       document.documentElement.dir = d.v === 'fa' ? 'rtl' : 'ltr';
       render();
+    },
+    secToggle: (d, el) => {
+      const box = el && el.closest ? el.closest('section.bp-sec') : null;
+      if (!box) return;
+      const open = !box.classList.contains('open');
+      box.classList.toggle('open', open);
+      el.setAttribute('aria-expanded', open ? 'true' : 'false');
+      secSet(d.sec, open);
+      paintSecAll();
+    },
+    secAll: () => {
+      const boxes = Array.prototype.slice.call(document.querySelectorAll('section.bp-sec'));
+      if (!boxes.length) return;
+      const expand = boxes.some((b) => !b.classList.contains('open'));
+      boxes.forEach((b) => {
+        b.classList.toggle('open', expand);
+        const head = b.querySelector('[data-act="secToggle"]');
+        if (head) head.setAttribute('aria-expanded', expand ? 'true' : 'false');
+        secSet(b.getAttribute('data-sec'), expand);
+      });
+      paintSecAll();
     },
 
     usersSearch: () => loadUsers(true),
@@ -2051,6 +2107,15 @@
   (async function boot() {
     if (S.token) {
       try { await api('/auth/session'); } catch (e) {   }
+    }
+    if (!S.token) { renderLogin(); return; }
+    render();
+  })();
+
+</script>
+</body>
+</html>
+try { await api('/auth/session'); } catch (e) {   }
     }
     if (!S.token) { renderLogin(); return; }
     render();
