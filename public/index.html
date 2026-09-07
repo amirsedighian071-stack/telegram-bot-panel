@@ -5,17 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>BotPanel — پنل مدیریت ربات</title>
   <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#020617">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232aabee'%3E%3Cpath d='M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z'/%3E%3C/svg%3E">
     <script>
     (function () {
       try {
-        var themes = ['dark', 'light', 'ocean', 'violet'];
+        var themes = ['dark', 'light', 'ocean', 'violet', 'forest', 'sunset'];
         var t = localStorage.getItem('bp_theme') || 'dark';
         if (themes.indexOf(t) < 0) t = 'dark';
         var l = localStorage.getItem('bp_lang') || 'fa';
         var d = document.documentElement;
         d.setAttribute('data-theme', t);
-        if (t === 'light') d.classList.remove('dark'); else d.classList.add('dark');
+        var isDark = t !== 'light';
+        if (isDark) d.classList.add('dark'); else d.classList.remove('dark');
+        try { d.style.colorScheme = isDark ? 'dark' : 'light'; } catch (e2) {}
         d.lang = l; d.dir = (l === 'fa') ? 'rtl' : 'ltr';
       } catch (e) {}
     })();
@@ -26,19 +30,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
   <script>
     (function () {
-      var saved = 'dark';
-      try { saved = localStorage.getItem('bp_theme') || 'dark'; } catch (e) {}
-      var palettes = {
-        ocean: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490' },
-        violet: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
-      };
-      var brand = palettes[saved] || { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' };
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             fontFamily: { sans: ['Vazirmatn', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Tahoma', 'sans-serif'] },
-            colors: { brand: brand },
+            colors: { brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
             keyframes: { fadeIn: { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } } },
             animation: { fadeIn: 'fadeIn .25s ease-out' },
           },
@@ -99,7 +96,9 @@
       .bp-utable tbody td[data-c="user"] .text-sm { max-width: 100% !important; }
     }
 
-    /* ===== Panel themes: dark / light / ocean / violet ===== */
+    .bp-noanim, .bp-noanim * { transition: none !important; }
+
+    /* ===== Panel themes: dark / light / ocean / violet / forest / sunset ===== */
     /* Ocean — deep navy surfaces + cyan accent */
     html[data-theme="ocean"] body {
       background: linear-gradient(160deg, #0c2743 0%, #081627 100%) fixed !important;
@@ -119,7 +118,7 @@
     html[data-theme="ocean"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #1a3a5e !important; }
     html[data-theme="ocean"].dark .bp-utable tbody tr { border-color: #1a3a5e !important; }
     html[data-theme="ocean"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #1a3a5e !important; }
-    /* Ocean accent fallbacks (also pushed to tailwind.config at runtime) */
+    /* Ocean accent overrides */
     html[data-theme="ocean"] .bg-brand-500 { background-color: #06b6d4 !important; }
     html[data-theme="ocean"] .hover\:bg-brand-600:hover { background-color: #0891b2 !important; }
     html[data-theme="ocean"] .text-brand-500 { color: #22d3ee !important; }
@@ -158,7 +157,7 @@
     html[data-theme="violet"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #322b58 !important; }
     html[data-theme="violet"].dark .bp-utable tbody tr { border-color: #322b58 !important; }
     html[data-theme="violet"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #322b58 !important; }
-    /* Violet accent fallbacks (also pushed to tailwind.config at runtime) */
+    /* Violet accent overrides */
     html[data-theme="violet"] .bg-brand-500 { background-color: #8b5cf6 !important; }
     html[data-theme="violet"] .hover\:bg-brand-600:hover { background-color: #7c3aed !important; }
     html[data-theme="violet"] .text-brand-500 { color: #a78bfa !important; }
@@ -177,6 +176,84 @@
     html[data-theme="violet"] .from-brand-400 { --tw-gradient-from: #a78bfa !important; --tw-gradient-to: rgb(167 139 250 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
     html[data-theme="violet"] .from-brand-700 { --tw-gradient-from: #6d28d9 !important; --tw-gradient-to: rgb(109 40 217 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
     html[data-theme="violet"] .via-brand-500 { --tw-gradient-to: rgb(139 92 246 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6, var(--tw-gradient-to) !important; }
+
+    /* Forest — deep green surfaces + emerald accent */
+    html[data-theme="forest"] body {
+      background: linear-gradient(160deg, #0d2b1f 0%, #071a12 100%) fixed !important;
+      background-color: #0a2318 !important;
+    }
+    html[data-theme="forest"].dark .dark\:bg-slate-900 { background-color: #0e2f21 !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-900\/95 { background-color: rgb(14 47 33 / .95) !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-950\/85 { background-color: rgb(12 40 28 / .88) !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-800 { background-color: #16402c !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-800\/30 { background-color: rgb(22 64 44 / .3) !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-800\/40 { background-color: rgb(22 64 44 / .4) !important; }
+    html[data-theme="forest"].dark .dark\:bg-slate-800\/60 { background-color: rgb(22 64 44 / .6) !important; }
+    html[data-theme="forest"].dark .dark\:hover\:bg-slate-800:hover { background-color: #16402c !important; }
+    html[data-theme="forest"].dark .dark\:border-slate-800 { border-color: #173d2a !important; }
+    html[data-theme="forest"].dark .dark\:border-slate-700 { border-color: #1f5138 !important; }
+    html[data-theme="forest"].dark .dark\:border-slate-600 { border-color: #2a6a49 !important; }
+    html[data-theme="forest"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #173d2a !important; }
+    html[data-theme="forest"].dark .bp-utable tbody tr { border-color: #173d2a !important; }
+    html[data-theme="forest"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #173d2a !important; }
+    /* Forest accent overrides */
+    html[data-theme="forest"] .bg-brand-500 { background-color: #10b981 !important; }
+    html[data-theme="forest"] .hover\:bg-brand-600:hover { background-color: #059669 !important; }
+    html[data-theme="forest"] .text-brand-500 { color: #34d399 !important; }
+    html[data-theme="forest"] .text-brand-600 { color: #10b981 !important; }
+    html[data-theme="forest"] .hover\:text-brand-500:hover { color: #34d399 !important; }
+    html[data-theme="forest"].dark .dark\:text-brand-400 { color: #34d399 !important; }
+    html[data-theme="forest"] .bg-brand-500\/10 { background-color: rgb(16 185 129 / .1) !important; }
+    html[data-theme="forest"] .bg-brand-500\/15 { background-color: rgb(16 185 129 / .15) !important; }
+    html[data-theme="forest"] .\!border-brand-500 { border-color: #10b981 !important; }
+    html[data-theme="forest"] .\!text-brand-500 { color: #10b981 !important; }
+    html[data-theme="forest"] .focus\:border-brand-500:focus { border-color: #10b981 !important; }
+    html[data-theme="forest"] .focus\:ring-brand-500\/40:focus { --tw-ring-color: rgb(16 185 129 / .4) !important; }
+    html[data-theme="forest"] .accent-brand-500 { accent-color: #10b981 !important; }
+    html[data-theme="forest"] .shadow-brand-500\/25 { --tw-shadow-color: rgb(16 185 129 / .25) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="forest"] .shadow-brand-500\/30 { --tw-shadow-color: rgb(16 185 129 / .3) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="forest"] .from-brand-400 { --tw-gradient-from: #34d399 !important; --tw-gradient-to: rgb(52 211 153 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="forest"] .from-brand-700 { --tw-gradient-from: #047857 !important; --tw-gradient-to: rgb(4 120 87 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="forest"] .via-brand-500 { --tw-gradient-to: rgb(16 185 129 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #10b981, var(--tw-gradient-to) !important; }
+
+    /* Sunset — deep espresso surfaces + amber accent */
+    html[data-theme="sunset"] body {
+      background: linear-gradient(160deg, #2b1a10 0%, #170e08 100%) fixed !important;
+      background-color: #211309 !important;
+    }
+    html[data-theme="sunset"].dark .dark\:bg-slate-900 { background-color: #2a1a11 !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-900\/95 { background-color: rgb(42 26 17 / .95) !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-950\/85 { background-color: rgb(38 23 15 / .88) !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-800 { background-color: #3a2417 !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-800\/30 { background-color: rgb(58 36 23 / .3) !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-800\/40 { background-color: rgb(58 36 23 / .4) !important; }
+    html[data-theme="sunset"].dark .dark\:bg-slate-800\/60 { background-color: rgb(58 36 23 / .6) !important; }
+    html[data-theme="sunset"].dark .dark\:hover\:bg-slate-800:hover { background-color: #3a2417 !important; }
+    html[data-theme="sunset"].dark .dark\:border-slate-800 { border-color: #3d2718 !important; }
+    html[data-theme="sunset"].dark .dark\:border-slate-700 { border-color: #54341f !important; }
+    html[data-theme="sunset"].dark .dark\:border-slate-600 { border-color: #6f4527 !important; }
+    html[data-theme="sunset"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #3d2718 !important; }
+    html[data-theme="sunset"].dark .bp-utable tbody tr { border-color: #3d2718 !important; }
+    html[data-theme="sunset"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #3d2718 !important; }
+    /* Sunset accent overrides */
+    html[data-theme="sunset"] .bg-brand-500 { background-color: #f59e0b !important; }
+    html[data-theme="sunset"] .hover\:bg-brand-600:hover { background-color: #d97706 !important; }
+    html[data-theme="sunset"] .text-brand-500 { color: #fbbf24 !important; }
+    html[data-theme="sunset"] .text-brand-600 { color: #f59e0b !important; }
+    html[data-theme="sunset"] .hover\:text-brand-500:hover { color: #fbbf24 !important; }
+    html[data-theme="sunset"].dark .dark\:text-brand-400 { color: #fbbf24 !important; }
+    html[data-theme="sunset"] .bg-brand-500\/10 { background-color: rgb(245 158 11 / .1) !important; }
+    html[data-theme="sunset"] .bg-brand-500\/15 { background-color: rgb(245 158 11 / .15) !important; }
+    html[data-theme="sunset"] .\!border-brand-500 { border-color: #f59e0b !important; }
+    html[data-theme="sunset"] .\!text-brand-500 { color: #f59e0b !important; }
+    html[data-theme="sunset"] .focus\:border-brand-500:focus { border-color: #f59e0b !important; }
+    html[data-theme="sunset"] .focus\:ring-brand-500\/40:focus { --tw-ring-color: rgb(245 158 11 / .4) !important; }
+    html[data-theme="sunset"] .accent-brand-500 { accent-color: #f59e0b !important; }
+    html[data-theme="sunset"] .shadow-brand-500\/25 { --tw-shadow-color: rgb(245 158 11 / .25) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="sunset"] .shadow-brand-500\/30 { --tw-shadow-color: rgb(245 158 11 / .3) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="sunset"] .from-brand-400 { --tw-gradient-from: #fbbf24 !important; --tw-gradient-to: rgb(251 191 36 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="sunset"] .from-brand-700 { --tw-gradient-from: #b45309 !important; --tw-gradient-to: rgb(180 83 9 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="sunset"] .via-brand-500 { --tw-gradient-to: rgb(245 158 11 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #f59e0b, var(--tw-gradient-to) !important; }
 </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen">
@@ -278,7 +355,7 @@
       webhookMgmt: 'مدیریت وب‌هوک', setWebhook: 'تنظیم وب‌هوک', delWebhook: 'حذف وب‌هوک',
       confirmDelWh: 'وب‌هوک حذف شود؟ ربات پیام‌ها را دریافت نخواهد کرد.',
       webhookSetOk: 'وب‌هوک با موفقیت تنظیم شد', webhookDelOk: 'وب‌هوک حذف شد',
-      panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تیره', light: 'روشن', themeOcean: 'اقیانوس', themeViolet: 'بنفش', language: 'زبان',
+      panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تیره', light: 'روشن', themeOcean: 'اقیانوس', themeViolet: 'بنفش', themeForest: 'جنگل', themeSunset: 'غروب', language: 'زبان',
       expandAll: 'باز کردن همه', collapseAll: 'بستن همه',
       version: 'نسخه',
     },
@@ -363,7 +440,7 @@
       webhookMgmt: 'Webhook management', setWebhook: 'Set webhook', delWebhook: 'Delete webhook',
       confirmDelWh: 'Delete the webhook? The bot will stop receiving updates.',
       webhookSetOk: 'Webhook configured successfully', webhookDelOk: 'Webhook deleted',
-      panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', themeOcean: 'Ocean', themeViolet: 'Violet', language: 'Language',
+      panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', themeOcean: 'Ocean', themeViolet: 'Violet', themeForest: 'Forest', themeSunset: 'Sunset', language: 'Language',
       expandAll: 'Expand all', collapseAll: 'Collapse all',
       version: 'Version',
     },
@@ -480,13 +557,15 @@
   };
   const chip = (color, txt) => `<span class="${CLS.chip} ${color}">${txt}</span>`;
 
-  /* ===== Panel themes: dark / light / ocean / violet ===== */
-  const THEMES = ['dark', 'light', 'ocean', 'violet'];
+  /* ===== Panel themes: dark / light / ocean / violet / forest / sunset ===== */
+  const THEMES = ['dark', 'light', 'ocean', 'violet', 'forest', 'sunset'];
   const THEME_META = {
-    dark:   { dark: true,  icon: 'moon',     nameKey: 'dark',        brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
-    light:  { dark: false, icon: 'sun',      nameKey: 'light',       brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
-    ocean:  { dark: true,  icon: 'waves',    nameKey: 'themeOcean',  brand: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490' } },
-    violet: { dark: true,  icon: 'sparkles', nameKey: 'themeViolet', brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' } },
+    dark:   { dark: true,  icon: 'moon',     nameKey: 'dark',        meta: '#020617' },
+    light:  { dark: false, icon: 'sun',      nameKey: 'light',       meta: '#f8fafc' },
+    ocean:  { dark: true,  icon: 'waves',    nameKey: 'themeOcean',  meta: '#0a2036' },
+    violet: { dark: true,  icon: 'sparkles', nameKey: 'themeViolet', meta: '#1b1740' },
+    forest: { dark: true,  icon: 'leaf',     nameKey: 'themeForest', meta: '#0a2318' },
+    sunset: { dark: true,  icon: 'sunset',   nameKey: 'themeSunset', meta: '#211309' },
   };
   const getTheme = () => {
     let v = 'dark';
@@ -497,28 +576,20 @@
     if (!THEME_META[name]) name = 'dark';
     const meta = THEME_META[name];
     const d = document.documentElement;
+    d.classList.add('bp-noanim');
     d.setAttribute('data-theme', name);
     d.classList.toggle('dark', meta.dark);
+    d.style.colorScheme = meta.dark ? 'dark' : 'light';
     try { localStorage.setItem('bp_theme', name); } catch (e) {}
-    try {
-      if (window.tailwind && tailwind.config) {
-        const cfg = tailwind.config;
-        const theme = cfg.theme || {};
-        const extend = theme.extend || {};
-        const colors = extend.colors || {};
-        tailwind.config = Object.assign({}, cfg, {
-          theme: Object.assign({}, theme, {
-            extend: Object.assign({}, extend, {
-              colors: Object.assign({}, colors, { brand: Object.assign({}, meta.brand) }),
-            }),
-          }),
-        });
-      }
-    } catch (e) {}
+    const mc = document.querySelector('meta[name="theme-color"]');
+    if (mc && meta.meta) mc.setAttribute('content', meta.meta);
     const btn = document.querySelector('[data-act="toggleTheme"]');
     if (btn) btn.innerHTML = '<i data-lucide="' + meta.icon + '" class="w-[18px] h-[18px]"></i>';
     refreshIcons();
     try { paintPrefs(); } catch (e) {}
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { d.classList.remove('bp-noanim'); });
+    });
   }
 
   async function api(path, opts = {}) {
@@ -1697,11 +1768,13 @@
       secCard('prefs', 'sliders-horizontal', t('panelPrefs'),
       '<div class="space-y-4">' +
       '<div><span class="' + CLS.label + '">' + t('appearance') + '</span>' +
-      '<div class="grid grid-cols-2 gap-2">' +
+      '<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">' +
       themeBtn('dark', 'moon', t('dark'), '#020617', '#2aabee') +
       themeBtn('light', 'sun', t('light'), '#f1f5f9', '#2aabee') +
       themeBtn('ocean', 'waves', t('themeOcean'), '#0a2036', '#06b6d4') +
       themeBtn('violet', 'sparkles', t('themeViolet'), '#1b1740', '#8b5cf6') +
+      themeBtn('forest', 'leaf', t('themeForest'), '#0a2318', '#10b981') +
+      themeBtn('sunset', 'sunset', t('themeSunset'), '#211309', '#f59e0b') +
       '</div></div>' +
       '<div><span class="' + CLS.label + '">' + t('language') + '</span>' +
       '<div class="flex gap-2">' +
