@@ -61,6 +61,8 @@
     .bp-sec:not(.open) .bp-sec-body { grid-template-rows: 0fr; }
     .bp-sec .chev { transition: transform .28s ease; }
     .bp-sec.open .chev { transform: rotate(180deg); }
+    .bp-sec-inner > div { transition: opacity .25s ease, transform .25s ease; }
+    .bp-sec:not(.open) .bp-sec-inner > div { opacity: 0; transform: translateY(-6px); }
 
     html, body { overflow-x: clip; }
     @supports not (overflow: clip) { html, body { overflow-x: hidden; } }
@@ -97,6 +99,25 @@
     }
 
     .bp-noanim, .bp-noanim * { transition: none !important; }
+
+    #dd-panel { position: fixed; z-index: 70; overflow-y: auto; overscroll-behavior: contain; border-radius: .875rem; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 12px 32px rgb(2 6 23 / .18); padding: .375rem; -webkit-overflow-scrolling: touch; }
+    .dark #dd-panel { background: #0f172a; border-color: #334155; box-shadow: 0 12px 32px rgb(0 0 0 / .5); }
+    html[data-theme="ocean"] #dd-panel { background: #0e2a47; border-color: #1a3a5e; }
+    html[data-theme="violet"] #dd-panel { background: #231e44; border-color: #322b58; }
+    html[data-theme="forest"] #dd-panel { background: #0e2f21; border-color: #173d2a; }
+    html[data-theme="sunset"] #dd-panel { background: #2a1a11; border-color: #3d2718; }
+    .dd-opt { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .625rem .75rem; font-size: .875rem; line-height: 1.4; border-radius: .625rem; color: #334155; cursor: pointer; text-align: start; }
+    .dark .dd-opt { color: #e2e8f0; }
+    .dd-opt:hover { background: #f1f5f9; }
+    .dark .dd-opt:hover { background: rgb(148 163 184 / .14); }
+    .dd-opt.sel { font-weight: 700; color: #0284c7; }
+    .dark .dd-opt.sel { color: #38bdf8; }
+    .dd-check { opacity: 0; font-weight: 800; margin-inline-start: auto; }
+    .dd-opt.sel .dd-check { opacity: 1; }
+    .dd-chev { transition: transform .2s ease; }
+    .dd-chev.rot { transform: rotate(180deg); }
+    @keyframes ddIn { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
+    .dd-in { animation: ddIn .16s ease-out; }
 
     /* ===== Panel themes: dark / light / ocean / violet / forest / sunset ===== */
     /* Ocean — deep navy surfaces + cyan accent */
@@ -265,6 +286,7 @@
   </div>
 
     <div id="toasts" class="fixed z-[60] bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 flex flex-col gap-2 w-[min(92vw,380px)] pointer-events-none"></div>
+    <div id="dd-panel" role="listbox" class="hidden"></div>
 
   <noscript><div style="padding:2rem;text-align:center">This app requires JavaScript / این پنل به جاوااسکریپت نیاز دارد.</div></noscript>
 
@@ -357,6 +379,7 @@
       webhookSetOk: 'وب‌هوک با موفقیت تنظیم شد', webhookDelOk: 'وب‌هوک حذف شد',
       panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تیره', light: 'روشن', themeOcean: 'اقیانوس', themeViolet: 'بنفش', themeForest: 'جنگل', themeSunset: 'غروب', language: 'زبان',
       expandAll: 'باز کردن همه', collapseAll: 'بستن همه',
+      startText: 'متن شروع (/start)', helpText: 'راهنما (/help)', recentHist: 'ارسال‌های اخیر',
       version: 'نسخه',
     },
     en: {
@@ -442,6 +465,7 @@
       webhookSetOk: 'Webhook configured successfully', webhookDelOk: 'Webhook deleted',
       panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', themeOcean: 'Ocean', themeViolet: 'Violet', themeForest: 'Forest', themeSunset: 'Sunset', language: 'Language',
       expandAll: 'Expand all', collapseAll: 'Collapse all',
+      startText: 'Start text (/start)', helpText: 'Help (/help)', recentHist: 'Recent sends',
       version: 'Version',
     },
   };
@@ -463,10 +487,11 @@
     { id: 'settings', icon: 'settings' },
   ];
   const UP = { cursor: null, stack: [], page: 1, limit: 20, q: '' };
-  const BC = { tab: 'text', target: 'all', rows: [[]], pollOpts: ['', ''], userIds: '', chatId: '', running: false, jobId: null };
-  const MU = { menu: null, defaults: null, tab: 'welcome', sub: null };
+  const BC = { target: 'all', rows: [[]], pollOpts: ['', ''], userIds: '', chatId: '', running: false, jobId: null, engLoaded: false };
+  const MU = { menu: null, defaults: null, sub: null };
   const CF = { resolve: null };
   const MODAL = { ctx: {} };
+  const DD = { openBox: null };
 
   var _0x7a3d = [
     220,133,211,192,133,157,133,195,194,209,
@@ -970,9 +995,7 @@
       '<input id="user-q" placeholder="' + t('searchUsers') + '" class="' + CLS.input + ' ps-10">' +
       '</div>' +
       '<div class="flex gap-2">' +
-      '<select id="users-limit" class="' + CLS.input + ' w-auto" data-act-change="usersLimit">' +
-      [10, 20, 50, 100].map((n) => '<option value="' + n + '"' + (n === UP.limit ? ' selected' : '') + '>' + fmtNum(n) + ' / ' + t('perPage') + '</option>').join('') +
-      '</select>' +
+      ddHtml({ id: 'users-limit', current: UP.limit, wrapCls: 'w-auto shrink-0', btnCls: '!w-auto', options: [10, 20, 50, 100].map((n) => [n, fmtNum(n) + ' / ' + t('perPage')]) }) +
       '<button data-act="usersSearch" class="' + CLS.btnS + '"><i data-lucide="search" class="w-4 h-4"></i></button>' +
       '<button data-act="usersRefresh" class="' + CLS.btnS + '" title="' + t('refresh') + '"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>' +
       '</div></div>' +
@@ -1065,8 +1088,7 @@
       '<textarea id="dm-text" rows="5" maxlength="4096" class="' + CLS.input + '" placeholder="' + t('messageText') + '"></textarea>' +
       '<div class="flex items-center gap-2 mt-3">' +
       '<label class="text-xs text-slate-500">' + t('parseMode') + ':</label>' +
-      '<select id="dm-parse" class="' + CLS.input + ' w-auto !py-1.5 text-xs">' +
-      '<option value="">' + t('plain') + '</option><option>HTML</option><option>MarkdownV2</option></select></div>' +
+      ddHtml({ id: 'dm-parse', current: '', wrapCls: 'w-auto', btnCls: '!w-auto !py-1.5 !text-xs', options: [['', t('plain')], ['HTML', 'HTML'], ['MarkdownV2', 'MarkdownV2']] }) + '</div>' +
       '<div class="flex justify-end gap-2 mt-5">' +
       '<button data-act="modalClose" class="' + CLS.btnS + '">' + t('cancel') + '</button>' +
       '<button data-act="sendUserMsg" class="' + CLS.btnP + '"><i data-lucide="send" class="w-4 h-4"></i>' + t('send') + '</button></div></div>'
@@ -1104,12 +1126,12 @@
   }
 
   function bcTargetWidget() {
-    const opt = (v, lbl) => '<option value="' + v + '"' + (BC.target === v ? ' selected' : '') + '>' + lbl + '</option>';
-    return '<div class="grid sm:grid-cols-2 gap-4 mb-4">' +
+    return '<div class="grid sm:grid-cols-2 gap-4">' +
       '<div><label class="' + CLS.label + '">' + t('target') + '</label>' +
-      '<select id="bc-target" data-act-change="bcTarget" class="' + CLS.input + '">' +
-      opt('all', t('allUsers')) + opt('active7d', t('active7d')) + opt('active30d', t('active30d')) +
-      opt('users', t('targetUsers')) + opt('chat', t('targetChat')) + '</select>' +
+      ddHtml({ id: 'bc-target', current: BC.target, options: [
+        ['all', t('allUsers')], ['active7d', t('active7d')], ['active30d', t('active30d')],
+        ['users', t('targetUsers')], ['chat', t('targetChat')],
+      ] }) +
       '<p class="text-[11px] text-slate-400 mt-1.5">' + t('targetHint') + '</p></div>' +
       '<div id="tg-users" class="' + (BC.target === 'users' ? '' : 'hidden') + '">' +
       '<label class="' + CLS.label + '">' + t('targetUsers') + '</label>' +
@@ -1151,61 +1173,60 @@
     refreshIcons();
   }
 
+  function bcSendBtn(kind) {
+    return '<div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">' +
+      '<button data-act="bcSend" data-kind="' + kind + '" class="' + CLS.btnP + '"><i data-lucide="rocket" class="w-4 h-4"></i>' + t('startBroadcast') + '</button></div>';
+  }
+  function bcMiniHist(kind) {
+    return '<div class="mt-5"><h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">' + t('recentHist') + '</h4>' +
+      '<div id="bc-hist-' + kind + '"><div class="py-4 text-center text-slate-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block"></i></div></div></div>';
+  }
+  function bcResultsBody() {
+    return '<div class="flex items-center justify-between mb-3"><h3 class="font-bold text-sm">' + t('pollsList') + '</h3>' +
+      '<button data-act="engRefresh" class="' + CLS.iconBtn + '"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>' +
+      '<div id="eng-polls" class="space-y-3"></div>' +
+      '<div class="flex items-center justify-between mb-3 mt-6"><h3 class="font-bold text-sm">' + t('postsList') + '</h3></div>' +
+      '<div id="eng-posts" class="space-y-3"></div>';
+  }
   function renderBroadcast() {
-    const tab = (id, icon, lbl) =>
-      '<button data-act="bcTab" data-tab="' + id + '" class="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
-      (BC.tab === id ? 'bg-white dark:bg-slate-900 shadow text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200') + '">' +
-      '<i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i>' + lbl + '</button>';
-
-    let form = '';
-    if (BC.tab === 'text') {
-      form =
-        '<label class="' + CLS.label + '">' + t('messageText') + '</label>' +
-        '<textarea id="bc-text" rows="5" maxlength="4096" class="' + CLS.input + '">' + esc($('bc-text') ? $('bc-text').value : '') + '</textarea>' +
-        '<div class="text-end text-[11px] text-slate-400 mt-1"><span id="bc-count">0 / 4096</span></div>' +
-        '<div class="grid sm:grid-cols-2 gap-4 mt-3"><div><label class="' + CLS.label + '">' + t('parseMode') + '</label>' +
-        '<select id="bc-parse" class="' + CLS.input + '"><option value="">' + t('plain') + '</option><option>HTML</option><option>MarkdownV2</option></select></div></div>' +
-        '<div class="mt-3"><div class="flex items-center justify-between mb-2"><label class="' + CLS.label + ' !mb-0">' + t('addUrlRow') + '</label></div>' +
-        '<div id="bc-rows" class="space-y-3"></div>' +
-        '<button data-act="bcAddRow" class="' + CLS.btnS + ' mt-3 text-xs !py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + t('addUrlRow') + '</button></div>';
-    } else if (BC.tab === 'poll') {
-      form =
-        '<label class="' + CLS.label + '">' + t('question') + '</label>' +
-        '<input id="poll-q" maxlength="300" placeholder="' + t('questionPh') + '" class="' + CLS.input + '">' +
-        '<label class="' + CLS.label + ' mt-4">' + t('pollTab') + '</label>' +
-        '<div id="poll-opts" class="space-y-2"></div>' +
-        '<button data-act="pollAddOpt" class="' + CLS.btnS + ' mt-3 text-xs !py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + t('addOpt') + '</button>' +
-        '<p class="text-[11px] text-slate-400 mt-3">' + t('pollHint') + '</p>';
-    } else if (BC.tab === 'photo') {
-      form =
-        '<label class="' + CLS.label + '">' + t('photoUrl') + '</label>' +
-        '<input id="ph-url" dir="ltr" placeholder="' + t('photoUrlPh') + '" class="' + CLS.input + '">' +
-        '<label class="' + CLS.label + ' mt-4">' + t('captionPh') + '</label>' +
-        '<textarea id="ph-cap" rows="3" maxlength="1024" class="' + CLS.input + '"></textarea>' +
-        '<label class="flex items-center gap-2.5 mt-4 text-sm cursor-pointer">' +
-        '<input id="ph-react" type="checkbox" checked class="w-4 h-4 accent-brand-500">' + t('withReactions') + '</label>' +
-        '<p class="text-[11px] text-slate-400 mt-3">' + t('photoHint') + '</p>';
-    } else {
-      form =
-        '<div class="flex items-center justify-between mb-3"><h3 class="font-bold text-sm">' + t('pollsList') + '</h3>' +
-        '<button data-act="engRefresh" class="' + CLS.iconBtn + '"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>' +
-        '<div id="eng-polls" class="space-y-3"></div>' +
-        '<div class="flex items-center justify-between mb-3 mt-6"><h3 class="font-bold text-sm">' + t('postsList') + '</h3></div>' +
-        '<div id="eng-posts" class="space-y-3"></div>';
-    }
+    BC.engLoaded = false;
+    const textBody =
+      '<label class="' + CLS.label + '">' + t('messageText') + '</label>' +
+      '<textarea id="bc-text" rows="5" maxlength="4096" class="' + CLS.input + '"></textarea>' +
+      '<div class="text-end text-[11px] text-slate-400 mt-1"><span id="bc-count">0 / 4096</span></div>' +
+      '<div class="grid sm:grid-cols-2 gap-4 mt-3"><div><label class="' + CLS.label + '">' + t('parseMode') + '</label>' +
+      ddHtml({ id: 'bc-parse', current: '', options: [['', t('plain')], ['HTML', 'HTML'], ['MarkdownV2', 'MarkdownV2']] }) + '</div></div>' +
+      '<div class="mt-3"><div class="flex items-center justify-between mb-2"><label class="' + CLS.label + ' !mb-0">' + t('addUrlRow') + '</label></div>' +
+      '<div id="bc-rows" class="space-y-3"></div>' +
+      '<button data-act="bcAddRow" class="' + CLS.btnS + ' mt-3 text-xs !py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + t('addUrlRow') + '</button></div>' +
+      bcSendBtn('text') + bcMiniHist('text');
+    const pollBody =
+      '<label class="' + CLS.label + '">' + t('question') + '</label>' +
+      '<input id="poll-q" maxlength="300" placeholder="' + t('questionPh') + '" class="' + CLS.input + '">' +
+      '<label class="' + CLS.label + ' mt-4">' + t('pollTab') + '</label>' +
+      '<div id="poll-opts" class="space-y-2"></div>' +
+      '<button data-act="pollAddOpt" class="' + CLS.btnS + ' mt-3 text-xs !py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + t('addOpt') + '</button>' +
+      '<p class="text-[11px] text-slate-400 mt-3">' + t('pollHint') + '</p>' +
+      bcSendBtn('poll') + bcMiniHist('poll');
+    const photoBody =
+      '<label class="' + CLS.label + '">' + t('photoUrl') + '</label>' +
+      '<input id="ph-url" dir="ltr" placeholder="' + t('photoUrlPh') + '" class="' + CLS.input + '">' +
+      '<label class="' + CLS.label + ' mt-4">' + t('captionPh') + '</label>' +
+      '<textarea id="ph-cap" rows="3" maxlength="1024" class="' + CLS.input + '"></textarea>' +
+      '<label class="flex items-center gap-2.5 mt-4 text-sm cursor-pointer">' +
+      '<input id="ph-react" type="checkbox" checked class="w-4 h-4 accent-brand-500">' + t('withReactions') + '</label>' +
+      '<p class="text-[11px] text-slate-400 mt-3">' + t('photoHint') + '</p>' +
+      bcSendBtn('photo') + bcMiniHist('photo');
+    const histBody =
+      '<div class="flex justify-end mb-2"><button data-act="bcHistRefresh" class="' + CLS.iconBtn + '"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>' +
+      '<div id="bc-hist"><div class="py-6 text-center text-slate-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block"></i></div></div>';
 
     $('view').innerHTML =
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<div class="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 mb-5">' +
-      tab('text', 'type', t('msgTab')) + tab('poll', 'bar-chart-3', t('pollTab')) +
-      tab('photo', 'image', t('photoTab')) + tab('results', 'line-chart', t('resultsTab')) +
-      '</div>' +
-      (BC.tab !== 'results' ? bcTargetWidget() : '') +
-      '<div id="bc-form">' + form + '</div>' +
-      (BC.tab !== 'results'
-        ? '<div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">' +
-          '<button id="bc-start" data-act="bcSend" class="' + CLS.btnP + '"><i data-lucide="rocket" class="w-4 h-4"></i>' + t('startBroadcast') + '</button></div>'
-        : '') +
+      '<div class="space-y-4">' +
+      accCard('bc', 'target', 'users', t('target'), bcTargetWidget()) +
+      accCard('bc', 'text', 'type', t('msgTab'), textBody) +
+      accCard('bc', 'poll', 'bar-chart-3', t('pollTab'), pollBody) +
+      accCard('bc', 'photo', 'image', t('photoTab'), photoBody) +
       '</div>' +
 
       '<div id="run-card" class="' + CLS.card + ' p-5 md:p-6 mt-4 hidden">' +
@@ -1220,16 +1241,18 @@
       '<button id="rp-stop" data-act="bcStop" class="' + CLS.btnD + '"><i data-lucide="square" class="w-4 h-4"></i>' + t('stop') + '</button></div>' +
       '</div>' +
 
-      '<div class="' + CLS.card + ' p-5 md:p-6 mt-4">' +
-      '<div class="flex items-center justify-between mb-3"><h3 class="font-bold text-sm flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-brand-500"></i>' + t('broadcastHistory') + '</h3>' +
-      '<button data-act="bcHistRefresh" class="' + CLS.iconBtn + '"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>' +
-      '<div id="bc-hist"><div class="py-6 text-center text-slate-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block"></i></div></div></div>';
+      '<div class="space-y-4 mt-4">' +
+      accCard('bc', 'results', 'line-chart', t('resultsTab'), bcResultsBody()) +
+      accCard('bc', 'history', 'history', t('broadcastHistory'), histBody) +
+      '</div>';
 
     refreshIcons();
-    if (BC.tab === 'text') { renderBcRows(); const ta = $('bc-text'); if (ta) { ta.dispatchEvent(new Event('input')); } }
-    if (BC.tab === 'poll') renderPollOpts();
-    if (BC.tab === 'results') loadEngagement();
+    renderBcRows();
+    const ta = $('bc-text');
+    if (ta) ta.dispatchEvent(new Event('input'));
+    renderPollOpts();
     loadHistory();
+    if (accOpen('bc', 'results')) { BC.engLoaded = true; loadEngagement(); }
   }
 
   async function loadEngagement() {
@@ -1290,25 +1313,32 @@
     loadHistory();
   }
 
+  function bcHistRow(j) {
+    const fb = j.kind === 'poll' ? '📊 ' + t('pollTab') : j.kind === 'photo' ? '🖼 ' + t('photoTab') : t('msgTab');
+    return '<div class="flex items-start gap-3 py-3 border-b last:border-0 border-slate-100 dark:border-slate-800">' +
+      '<div class="flex-1 min-w-0">' +
+      '<p class="text-sm line-clamp-1" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + esc((j.text || j.caption || fb).slice(0, 90)) + '</p>' +
+      '<p class="text-[11px] text-slate-400 mt-1">' + t('createdAt') + ': ' + fmtDate(j.createdAt) + ' · ' + fmtNum(j.sent) + '/' + fmtNum(j.total) + ' ' + t('sentLabel') + ' · ' + fmtNum(j.failed) + ' ' + t('failedLabel') + '</p>' +
+      '</div>' + bcChip(j.status) + '</div>';
+  }
   async function loadHistory() {
     const host = $('bc-hist');
-    if (!host) return;
     try {
       const d = await api('/broadcast');
-      const items = (d.jobs || []).slice(0, 10);
-      host.innerHTML = items.length ? items.map((j) =>
-        '<div class="flex items-start gap-3 py-3 border-b last:border-0 border-slate-100 dark:border-slate-800">' +
-        '<div class="flex-1 min-w-0">' +
-        '<p class="text-sm line-clamp-1" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">' + esc((j.text || j.caption || (j.pollId ? '📊 ' + t('pollTab') : t('msgTab'))).slice(0, 90)) + '</p>' +
-        '<p class="text-[11px] text-slate-400 mt-1">' + t('createdAt') + ': ' + fmtDate(j.createdAt) + ' · ' + fmtNum(j.sent) + '/' + fmtNum(j.total) + ' ' + t('sentLabel') + ' · ' + fmtNum(j.failed) + ' ' + t('failedLabel') + '</p>' +
-        '</div>' + bcChip(j.status) + '</div>'
-      ).join('') : '<p class="text-sm text-slate-400 text-center py-6">' + t('noHistory') + '</p>';
+      const jobs = d.jobs || [];
+      if (host) host.innerHTML = jobs.length ? jobs.slice(0, 10).map(bcHistRow).join('') : '<p class="text-sm text-slate-400 text-center py-6">' + t('noHistory') + '</p>';
+      ['text', 'poll', 'photo'].forEach((k) => {
+        const h = $('bc-hist-' + k);
+        if (!h) return;
+        const items = jobs.filter((j) => j.kind === k).slice(0, 5);
+        h.innerHTML = items.length ? items.map(bcHistRow).join('') : '<p class="text-xs text-slate-400 text-center py-3">' + t('noHistory') + '</p>';
+      });
       refreshIcons();
     } catch (e) {   }
   }
 
-  async function bcSend() {
-    const kind = BC.tab;
+  async function bcSend(d) {
+    const kind = (d && d.kind) || 'text';
     const body = { kind, target: BC.target };
     if (BC.target === 'users') body.userIds = $('bc-users').value;
     if (BC.target === 'chat') body.chatId = Number(($('bc-chat').value || '').replace(/[^\d-]/g, ''));
@@ -1327,7 +1357,8 @@
       if (!/^https?:\/\//.test(body.photo.url)) return toast(t('invalidForm'), 'error');
     }
 
-    const btn = $('bc-start');
+    const btn = document.querySelector('[data-act="bcSend"][data-kind="' + kind + '"]');
+    if (!btn) return;
     btn.disabled = true;
     btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>' + t('sending');
     refreshIcons();
@@ -1337,7 +1368,7 @@
         if (d.failed) toast(t('directPart') + ' (' + fmtNum(d.sent) + '/' + fmtNum(d.sent + d.failed) + ')', 'info');
         else toast(t('directSent'), 'success');
         loadHistory();
-        if (BC.tab === 'results') loadEngagement();
+        if (BC.engLoaded) loadEngagement();
       } else {
         BC.running = true;
         BC.jobId = d.job.id;
@@ -1466,12 +1497,11 @@
   function renderMenu() {
     $('view').innerHTML =
       '<p class="text-sm text-slate-500 -mt-2 mb-4 px-1">' + t('menuHint') + '</p>' +
-      '<div class="' + CLS.card + ' p-5 md:p-6">' +
-      '<div id="menu-editor"></div>' +
-      '<div class="flex gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">' +
+      '<div id="menu-editor" class="space-y-4"></div>' +
+      '<div class="flex gap-2 mt-4">' +
       '<button data-act="menuSave" class="' + CLS.btnP + '"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button>' +
       '<button data-act="menuReset" class="' + CLS.btnS + '"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>' + t('resetDefaults') + '</button>' +
-      '</div></div>';
+      '</div>';
 
     refreshIcons();
     if (!MU.menu) loadMenu();
@@ -1489,11 +1519,11 @@
 
   function btnValueEl(b) {
     if (b.type === 'submenu') {
-      const opts = Object.entries(MU.menu.submenus || {})
-        .filter(([id]) => id !== MU.sub)
-        .map(([id, sm]) => '<option value="' + esc(id) + '"' + (b.value === id ? ' selected' : '') + '>' + esc(sm.title || id) + ' (' + esc(id) + ')</option>').join('');
-      return '<select class="ib-v ' + CLS.input + ' !py-2 !bg-white dark:!bg-slate-800 col-span-2 sm:col-span-1" dir="ltr">' +
-        (opts || '<option value="">' + t('valSubmenu') + '</option>') + '</select>';
+      const entries = Object.entries(MU.menu.submenus || {}).filter(([id]) => id !== MU.sub);
+      const opts = entries.length
+        ? entries.map(([id, sm]) => [id, (sm.title || id) + ' (' + id + ')'])
+        : [['', t('valSubmenu')]];
+      return ddHtml({ current: b.value, inputCls: 'ib-v', wrapCls: 'col-span-2 sm:col-span-1', btnCls: '!py-2 !bg-white dark:!bg-slate-800', options: opts });
     }
     const ph = b.type === 'url' ? t('valueUrl') : b.type === 'text' ? t('valText') : t('valueCb');
     return '<input dir="ltr" class="ib-v ' + CLS.input + ' !py-2 !bg-white dark:!bg-slate-800 col-span-2 sm:col-span-1" placeholder="' + ph + '" value="' + esc(b.value) + '">';
@@ -1526,8 +1556,7 @@
       '<button data-act="btnMove" data-r="' + ri + '" data-b="' + bi + '" data-dir="' + dir + '" title="' + t(key) + '" class="' + CLS.iconBtn + ' !p-1.5' + (dis ? ' opacity-25 pointer-events-none' : '') + '"><i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i></button>';
     return '<div class="ib-card p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,1fr)_8rem_minmax(0,1fr)_auto] gap-2 items-center" data-b="' + bi + '">' +
       '<input class="ib-t ' + CLS.input + ' !py-2 !bg-white dark:!bg-slate-800" placeholder="' + t('btnText') + '" value="' + esc(b.text) + '">' +
-      '<select class="ib-type ' + CLS.input + ' !py-2 !bg-white dark:!bg-slate-800" dir="ltr">' +
-      BTN_TYPES.map(([v, lbl]) => '<option value="' + v + '"' + (b.type === v ? ' selected' : '') + '>' + lbl + '</option>').join('') + '</select>' +
+      ddHtml({ current: b.type, inputCls: 'ib-type', btnCls: '!py-2 !bg-white dark:!bg-slate-800', options: BTN_TYPES }) +
       btnValueEl(b) +
       '<div class="flex items-center justify-end gap-0.5 col-span-2 sm:col-span-1">' +
       mv('u', 'chevron-up', 'moveU', ri === 0) +
@@ -1541,9 +1570,10 @@
   function modalValueEl(type) {
     if (type === 'submenu') {
       const ids = Object.entries(MU.menu.submenus || {}).filter(([id]) => id !== MU.sub);
-      return '<select id="bm-value" class="' + CLS.input + '" dir="ltr">' +
-        (ids.map(([id, sm]) => '<option value="' + esc(id) + '">' + esc(sm.title || id) + ' (' + esc(id) + ')</option>').join('') ||
-          '<option value="">' + t('valSubmenu') + '</option>') + '</select>';
+      const opts = ids.length
+        ? ids.map(([id, sm]) => [id, (sm.title || id) + ' (' + id + ')'])
+        : [['', t('valSubmenu')]];
+      return ddHtml({ id: 'bm-value', current: opts[0][0], options: opts });
     }
     const ph = type === 'url' ? t('valueUrl') : type === 'text' ? t('valText') : t('valueCb');
     return '<input id="bm-value" dir="ltr" class="' + CLS.input + '" placeholder="' + ph + '">';
@@ -1553,8 +1583,8 @@
     syncMenuSafe();
     const rows = ctxButtons();
     const rowOpts = rows.map((r, i) =>
-        '<option value="' + i + '">' + t('rowLbl') + ' ' + fmtNum(i + 1) + ' (' + fmtNum(r.length) + ' ' + t('btnsCount') + ')</option>').join('') +
-      '<option value="new">' + t('newRowOpt') + '</option>';
+      [String(i), t('rowLbl') + ' ' + fmtNum(i + 1) + ' (' + fmtNum(r.length) + ' ' + t('btnsCount') + ')']);
+    rowOpts.push(['new', t('newRowOpt')]);
     openModal(
       '<div class="p-6">' +
       '<h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4 text-brand-500"></i>' + t('addBtnTitle') + '</h3>' +
@@ -1562,13 +1592,12 @@
       '<div><label class="' + CLS.label + '">' + t('btnText') + '</label>' +
       '<input id="bm-text" maxlength="64" class="' + CLS.input + '"></div>' +
       '<div><label class="' + CLS.label + '">' + t('btnType') + '</label>' +
-      '<select id="bm-type" class="' + CLS.input + '" dir="ltr">' +
-      BTN_TYPES.map(([v, lbl]) => '<option value="' + v + '">' + lbl + '</option>').join('') + '</select></div>' +
+      ddHtml({ id: 'bm-type', current: 'url', options: BTN_TYPES }) + '</div>' +
       '<div><label class="' + CLS.label + '">' + t('value') + '</label>' +
       '<div id="bm-value-box">' + modalValueEl('url') + '</div></div>' +
       '<div class="grid grid-cols-2 gap-3">' +
       '<div><label class="' + CLS.label + '">' + t('rowLbl') + '</label>' +
-      '<select id="bm-row" class="' + CLS.input + '">' + rowOpts + '</select></div>' +
+      ddHtml({ id: 'bm-row', current: rowOpts[0][0], options: rowOpts }) + '</div>' +
       '<div><label class="' + CLS.label + '">' + t('colLbl') + '</label>' +
       '<input id="bm-col" type="number" min="1" class="' + CLS.input + '" placeholder="⟵ ' + t('endOfRow') + '"></div></div>' +
       '</div>' +
@@ -1582,11 +1611,21 @@
   function renderMenuEditor() {
     const host = $('menu-editor');
     if (!host || !MU.menu) return;
+    ddClose();
     const m = MU.menu;
+    const ta = (id, label, val) =>
+      '<div><label class="' + CLS.label + '">' + label + '</label>' +
+      '<textarea id="' + id + '" rows="4" class="' + CLS.input + '">' + esc(val) + '</textarea></div>';
+    const hint = '<p class="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5"><i data-lucide="braces" class="w-3.5 h-3.5"></i>' + t('tplHint') + '</p>';
+    const startBody =
+      '<div class="grid sm:grid-cols-2 gap-4">' + ta('wm-fa', t('welcomeFa'), m.welcome.fa) + ta('wm-en', t('welcomeEn'), m.welcome.en) + '</div>' + hint;
+    const helpBody =
+      '<div class="grid sm:grid-cols-2 gap-4">' + ta('hp-fa', t('helpFa'), m.help.fa) + ta('hp-en', t('helpEn'), m.help.en) + '</div>' + hint;
 
+    let subsBody;
     if (MU.sub) {
       const sm = m.submenus[MU.sub] || { title: '', text: '', buttons: [] };
-      host.innerHTML =
+      subsBody =
         '<div class="flex items-center justify-between mb-4">' +
         '<button data-act="subBack" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">← ' + t('backToList') + '</button>' +
         '<button data-act="subDel" data-id="' + esc(MU.sub) + '" class="' + CLS.iconBtn + ' !p-1.5 text-rose-400" title="' + t('remove') + '"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>' +
@@ -1597,23 +1636,6 @@
         '<h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 mt-5 mb-2">' + t('pageBtns') + '</h4>' +
         '<div id="btn-editor"></div>' +
         '<p class="text-[11px] text-slate-400 mt-3">' + t('subHint') + '</p>';
-      renderBtnEditor();
-      refreshIcons();
-      return;
-    }
-
-    const tabs = [['welcome', 'message-circle'], ['inline', 'link-2'], ['submenus', 'folder-tree']];
-    let body = '';
-    if (MU.tab === 'welcome') {
-      const ta = (id, label, val) =>
-        '<div><label class="' + CLS.label + '">' + label + '</label>' +
-        '<textarea id="' + id + '" rows="4" class="' + CLS.input + '">' + esc(val) + '</textarea></div>';
-      body =
-        '<div class="grid sm:grid-cols-2 gap-4">' + ta('wm-fa', t('welcomeFa'), m.welcome.fa) + ta('wm-en', t('welcomeEn'), m.welcome.en) + '</div>' +
-        '<div class="grid sm:grid-cols-2 gap-4 mt-4">' + ta('hp-fa', t('helpFa'), m.help.fa) + ta('hp-en', t('helpEn'), m.help.en) + '</div>' +
-        '<p class="text-[11px] text-slate-400 mt-3 flex items-center gap-1.5"><i data-lucide="braces" class="w-3.5 h-3.5"></i>' + t('tplHint') + '</p>';
-    } else if (MU.tab === 'inline') {
-      body = '<h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">' + t('pageBtns') + '</h4><div id="btn-editor"></div>';
     } else {
       const subs = Object.entries(m.submenus || {}).map(([id, sm]) =>
         '<div class="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2">' +
@@ -1622,7 +1644,7 @@
         '<button data-act="subEditBtn" data-id="' + esc(id) + '" class="' + CLS.iconBtn + ' !p-1.5" title="' + t('subEdit') + '"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>' +
         '<button data-act="subDel" data-id="' + esc(id) + '" class="' + CLS.iconBtn + ' !p-1.5 text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>'
       ).join('');
-      body =
+      subsBody =
         '<div class="flex items-center justify-between mb-3"><h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">' + t('submenus') + '</h4>' +
         '<button data-act="subNew" class="' + CLS.btnS + ' !py-1.5 !px-3 text-xs"><i data-lucide="plus" class="w-3.5 h-3.5"></i>' + t('subNew') + '</button></div>' +
         '<div class="space-y-2">' + (subs || '<p class="text-xs text-slate-400">' + t('none') + '</p>') + '</div>' +
@@ -1630,31 +1652,33 @@
     }
 
     host.innerHTML =
-      '<div class="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 mb-5">' +
-      tabs.map(([id, icon]) =>
-        '<button data-act="menuTab" data-tab="' + id + '" class="flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
-        (MU.tab === id ? 'bg-white dark:bg-slate-900 shadow text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200') + '">' +
-        '<i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i>' + t(id === 'welcome' ? 'welcomeTab' : id === 'inline' ? 'inlineTab' : 'submenus') + '</button>').join('') +
-      '</div>' + body;
+      accCard('menu', 'start', 'message-circle', t('startText'), startBody) +
+      accCard('menu', 'help', 'info', t('helpText'), helpBody) +
+      (!MU.sub ? accCard('menu', 'inline', 'link-2', t('inlineTab'), '<h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">' + t('pageBtns') + '</h4><div id="btn-editor"></div>') : '') +
+      accCard('menu', 'subs', 'folder-tree', t('submenus'), subsBody);
 
-    if (MU.tab === 'inline') renderBtnEditor();
+    renderBtnEditor();
     refreshIcons();
   }
 
   function syncMenuDom() {
     if (!MU.menu) return;
     const m = MU.menu;
-    if (MU.tab === 'welcome' && !MU.sub) {
+    if ($('wm-fa') && $('wm-en')) {
       m.welcome.fa = $('wm-fa').value;
       m.welcome.en = $('wm-en').value;
+    }
+    if ($('hp-fa') && $('hp-en')) {
       m.help.fa = $('hp-fa').value;
       m.help.en = $('hp-en').value;
-    } else if (MU.sub) {
+    }
+    if (MU.sub) {
       const sm = m.submenus[MU.sub];
+      if (!sm) return;
       if ($('sm-title')) sm.title = $('sm-title').value;
       if ($('sm-text')) sm.text = $('sm-text').value;
       if (document.querySelector('#btn-editor')) sm.buttons = readIbRows();
-    } else if (MU.tab === 'inline') {
+    } else if (document.querySelector('#btn-editor')) {
       m.inlineButtons = readIbRows();
     }
   }
@@ -1678,28 +1702,109 @@
       '<span class="w-6 h-6 rounded-lg" style="background:' + accent + '"></span></span>' +
       '<span class="flex items-center gap-1 font-bold"><i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i>' + label + '</span></button>';
   }
-  const SEC_IDS = ['general', 'security', 'channel', 'webhook', 'tuning', 'prefs'];
-  function secOpen(id) {
+  const ACC_DEF = { set: ['general'], bc: ['target', 'text'], menu: ['start'] };
+  function accOpen(group, id) {
     try {
-      const s = JSON.parse(localStorage.getItem('bp_setsec') || '{}');
+      const s = JSON.parse(localStorage.getItem('bp_acc_' + group) || '{}');
       if (s && typeof s[id] === 'boolean') return s[id];
     } catch (e) {}
-    return id === 'general';
+    return (ACC_DEF[group] || []).indexOf(id) >= 0;
   }
-  function secSet(id, open) {
+  function accSet(group, id, open) {
     let s = {};
-    try { s = JSON.parse(localStorage.getItem('bp_setsec') || '{}') || {}; } catch (e) {}
+    try { s = JSON.parse(localStorage.getItem('bp_acc_' + group) || '{}') || {}; } catch (e) {}
     s[id] = !!open;
-    try { localStorage.setItem('bp_setsec', JSON.stringify(s)); } catch (e) {}
+    try { localStorage.setItem('bp_acc_' + group, JSON.stringify(s)); } catch (e) {}
   }
-  function secCard(id, icon, title, inner) {
-    const open = secOpen(id);
-    return '<section data-sec="' + id + '" class="bp-sec ' + CLS.card + ' overflow-hidden' + (open ? ' open' : '') + '">' +
-      '<button data-act="secToggle" data-sec="' + id + '" aria-expanded="' + open + '" aria-controls="sec-' + id + '" class="w-full flex items-center gap-2 p-5 md:p-6 text-start cursor-pointer">' +
+  function accCard(group, id, icon, title, inner) {
+    const open = accOpen(group, id);
+    return '<section data-acc="' + group + ':' + id + '" class="bp-sec ' + CLS.card + ' overflow-hidden' + (open ? ' open' : '') + '">' +
+      '<button data-act="accToggle" data-group="' + group + '" data-id="' + id + '" aria-expanded="' + open + '" class="w-full flex items-center gap-2 p-5 md:p-6 text-start cursor-pointer">' +
       '<i data-lucide="' + icon + '" class="w-4 h-4 text-brand-500 shrink-0"></i>' +
       '<span class="font-bold text-sm flex-1">' + title + '</span>' +
       '<i data-lucide="chevron-down" class="chev w-4 h-4 text-slate-400 shrink-0"></i></button>' +
-      '<div id="sec-' + id + '" class="bp-sec-body"><div class="bp-sec-inner"><div class="px-5 md:px-6 pb-5 md:pb-6">' + inner + '</div></div></div></section>';
+      '<div class="bp-sec-body"><div class="bp-sec-inner"><div class="px-5 md:px-6 pb-5 md:pb-6">' + inner + '</div></div></div></section>';
+  }
+  function secCard(id, icon, title, inner) { return accCard('set', id, icon, title, inner); }
+  function ddHtml(o) {
+    const cur = o.options.some((x) => String(x[0]) === String(o.current)) ? String(o.current) : String(o.options[0][0]);
+    const curLbl = (o.options.filter((x) => String(x[0]) === cur)[0] || o.options[0])[1];
+    const opts = o.options.map((x) => {
+      const on = String(x[0]) === cur;
+      return '<button data-act="ddPick" data-v="' + esc(x[0]) + '" data-lbl="' + esc(x[1]) + '" role="option" aria-selected="' + on + '" class="dd-opt' + (on ? ' sel' : '') + '">' +
+        '<span class="flex-1 truncate">' + esc(x[1]) + '</span><span class="dd-check">\u2713</span></button>';
+    }).join('');
+    return '<div class="bp-dd relative min-w-0' + (o.wrapCls ? ' ' + o.wrapCls : '') + '">' +
+      '<input type="hidden"' + (o.id ? ' id="' + o.id + '"' : '') + ' value="' + esc(cur) + '"' + (o.inputCls ? ' class="' + o.inputCls + '"' : '') + '>' +
+      '<button data-act="ddToggle" aria-haspopup="listbox" aria-expanded="false" class="' + CLS.input + ' flex items-center justify-between gap-2 cursor-pointer' + (o.btnCls ? ' ' + o.btnCls : '') + '">' +
+      '<span class="dd-label flex-1 truncate text-start">' + esc(curLbl) + '</span>' +
+      '<i data-lucide="chevron-down" class="dd-chev w-4 h-4 shrink-0 text-slate-400"></i></button>' +
+      '<div class="dd-src hidden">' + opts + '</div></div>';
+  }
+  function paintDropdowns(root) {
+    (root || document).querySelectorAll('.bp-dd').forEach((box) => {
+      const input = box.querySelector('input[type="hidden"]');
+      const label = box.querySelector('.dd-label');
+      if (!input || !label) return;
+      const v = String(input.value);
+      let lbl = null;
+      box.querySelectorAll('.dd-src .dd-opt').forEach((x) => {
+        const on = String(x.getAttribute('data-v')) === v;
+        x.classList.toggle('sel', on);
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
+        if (on) lbl = x.getAttribute('data-lbl');
+      });
+      if (lbl != null) label.textContent = lbl;
+    });
+  }
+  function ddOpen(box) {
+    const panel = $('dd-panel');
+    const src = box.querySelector('.dd-src');
+    const btn = box.querySelector('[data-act="ddToggle"]');
+    if (!panel || !src || !btn) return;
+    ddClose();
+    paintDropdowns(box);
+    panel.innerHTML = src.innerHTML;
+    panel.classList.remove('hidden');
+    panel.classList.remove('dd-in');
+    void panel.offsetWidth;
+    panel.classList.add('dd-in');
+    DD.openBox = box;
+    btn.setAttribute('aria-expanded', 'true');
+    const ch = btn.querySelector('.dd-chev');
+    if (ch) ch.classList.add('rot');
+    const r = btn.getBoundingClientRect();
+    const w = Math.max(Math.round(r.width), 160);
+    panel.style.width = w + 'px';
+    panel.style.minWidth = '';
+    panel.style.maxWidth = (window.innerWidth - 16) + 'px';
+    panel.style.left = Math.max(8, Math.min(Math.round(r.left), window.innerWidth - w - 8)) + 'px';
+    const maxH = 260;
+    const need = Math.min(panel.scrollHeight, maxH);
+    const below = window.innerHeight - r.bottom - 8;
+    const above = r.top - 8;
+    if (below >= need || below >= above) {
+      panel.style.top = Math.round(r.bottom + 6) + 'px';
+      panel.style.bottom = 'auto';
+      panel.style.maxHeight = Math.max(120, Math.min(maxH, below - 6)) + 'px';
+    } else {
+      panel.style.top = 'auto';
+      panel.style.bottom = Math.round(window.innerHeight - r.top + 6) + 'px';
+      panel.style.maxHeight = Math.max(120, Math.min(maxH, above - 6)) + 'px';
+    }
+  }
+  function ddClose() {
+    const panel = $('dd-panel');
+    if (panel) { panel.classList.add('hidden'); panel.innerHTML = ''; }
+    if (DD.openBox) {
+      const b = DD.openBox.querySelector('[data-act="ddToggle"]');
+      if (b) {
+        b.setAttribute('aria-expanded', 'false');
+        const c = b.querySelector('.dd-chev');
+        if (c) c.classList.remove('rot');
+      }
+      DD.openBox = null;
+    }
   }
   function paintSecAll() {
     const btn = $('sec-all-btn');
@@ -1709,7 +1814,7 @@
     btn.textContent = allOpen ? t('collapseAll') : t('expandAll');
   }
   function renderSettings() {
-    const allOpen = SEC_IDS.every(secOpen);
+    const allOpen = ['general', 'security', 'channel', 'webhook', 'tuning', 'prefs'].every((id) => accOpen('set', id));
     $('view').innerHTML =
       '<div class="flex justify-end mb-3 px-1">' +
       '<button id="sec-all-btn" data-act="secAll" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">' + (allOpen ? t('collapseAll') : t('expandAll')) + '</button></div>' +
@@ -1720,12 +1825,9 @@
       '<input id="st-token-in" dir="ltr" type="password" autocomplete="off" placeholder="123456:ABC-DEF…" class="' + CLS.input + '">' +
       '<p class="text-[11px] text-slate-400 mt-1.5">' + t('tokenHint') + '</p></div>' +
 '<div class="mb-4"><label class="' + CLS.label + '">' + t('botLang') + '</label>' +
-      '<select id="st-langmode" data-act-change="langMode" class="' + CLS.input + '">' +
-      '<option value="both">' + t('langBoth') + '</option>' +
-      '<option value="fa">' + t('langFaOnly') + '</option>' +
-      '<option value="en">' + t('langEnOnly') + '</option></select></div>' +
+      ddHtml({ id: 'st-langmode', current: 'both', options: [['both', t('langBoth')], ['fa', t('langFaOnly')], ['en', t('langEnOnly')]] }) + '</div>' +
       '<div class="mb-4" id="deflang-wrap"><label class="' + CLS.label + '">' + t('defaultBotLang') + '</label>' +
-      '<select id="st-lang" class="' + CLS.input + '"><option value="fa">فارسی</option><option value="en">English</option></select>' +
+      ddHtml({ id: 'st-lang', current: 'fa', options: [['fa', 'فارسی'], ['en', 'English']] }) +
       '<p class="text-[11px] text-slate-400 mt-1.5">' + t('defLangHint') + '</p></div>' +
       '<div class="mb-5"><label class="flex items-center gap-2.5 cursor-pointer text-sm">' +
       '<input id="st-sb-on" type="checkbox" class="w-4 h-4 accent-brand-500">' + t('supportAlways') + '</label>' +
@@ -1812,6 +1914,7 @@
       $('st-ch-url').value = rc.url || '';
       if (dash && $('st-wh-box')) $('st-wh-box').innerHTML = whBoxHtml(dash.webhook);
       paintPrefs();
+      paintDropdowns();
     } catch (e) { toast(e.message, 'error'); }
   }
 
@@ -1856,14 +1959,14 @@
       document.documentElement.dir = d.v === 'fa' ? 'rtl' : 'ltr';
       render();
     },
-    secToggle: (d, el) => {
+    accToggle: (d, el) => {
       const box = el && el.closest ? el.closest('section.bp-sec') : null;
       if (!box) return;
       const open = !box.classList.contains('open');
       box.classList.toggle('open', open);
       el.setAttribute('aria-expanded', open ? 'true' : 'false');
-      secSet(d.sec, open);
-      paintSecAll();
+      accSet(d.group, d.id, open);
+      if (d.group === 'bc' && d.id === 'results' && open && !BC.engLoaded) { BC.engLoaded = true; loadEngagement(); }
     },
     secAll: () => {
       const boxes = Array.prototype.slice.call(document.querySelectorAll('section.bp-sec'));
@@ -1871,11 +1974,30 @@
       const expand = boxes.some((b) => !b.classList.contains('open'));
       boxes.forEach((b) => {
         b.classList.toggle('open', expand);
-        const head = b.querySelector('[data-act="secToggle"]');
+        const head = b.querySelector('[data-act="accToggle"]');
         if (head) head.setAttribute('aria-expanded', expand ? 'true' : 'false');
-        secSet(b.getAttribute('data-sec'), expand);
+        const k = (b.getAttribute('data-acc') || ':').split(':');
+        accSet(k[0], k[1], expand);
       });
       paintSecAll();
+    },
+    ddToggle: (d, el) => {
+      const box = el && el.closest ? el.closest('.bp-dd') : null;
+      if (!box) return;
+      const panel = $('dd-panel');
+      if (DD.openBox === box && panel && !panel.classList.contains('hidden')) { ddClose(); return; }
+      ddOpen(box);
+    },
+    ddPick: (d) => {
+      const box = DD.openBox;
+      ddClose();
+      if (!box || !box.isConnected) return;
+      const input = box.querySelector('input[type="hidden"]');
+      if (!input) return;
+      input.value = d.v;
+      paintDropdowns(box);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
     },
 
     usersSearch: () => loadUsers(true),
@@ -1895,12 +2017,11 @@
     sendUserMsg: () => sendUserMsg(),
     userDetail: (d) => openUserDetail(d.id),
 
-    bcTab: (d) => { syncMenuSafe(); BC.tab = d.tab; renderBroadcast(); },
     bcAddRow: () => { BC.rows.push([{ text: '', url: '' }]); renderBcRows(); },
     bcDelRow: (d) => { BC.rows.splice(+d.r, 1); renderBcRows(); },
     bcAddBtn: (d) => { BC.rows[+d.r].push({ text: '', url: '' }); renderBcRows(); },
     bcDelBtn: (d) => { BC.rows[+d.r].splice(+d.b, 1); renderBcRows(); },
-    bcSend: () => bcSend(),
+    bcSend: (d) => bcSend(d),
     bcHistRefresh: () => loadHistory(),
     engRefresh: () => loadEngagement(),
     pollAddOpt: () => { syncPollOpts(); if (BC.pollOpts.length < 10) BC.pollOpts.push(''); renderPollOpts(); },
@@ -1923,7 +2044,6 @@
     supReply: (d) => supReply(d.id),
     supClose: (d) => supClose(d.id),
 
-    menuTab: (d) => { syncMenuSafe(); MU.tab = d.tab; MU.sub = null; renderMenuEditor(); },
     menuSave: async () => {
       syncMenuSafe();
       try { await api('/menu', { method: 'PUT', body: MU.menu }); toast(t('saved'), 'success'); }
@@ -1988,10 +2108,11 @@
       MU.menu.submenus = MU.menu.submenus || {};
       MU.menu.submenus[id] = { title: '', text: '', buttons: [[{ text: '', type: 'text', value: '' }]] };
       MU.sub = id;
+      accSet('menu', 'subs', true);
       renderMenuEditor();
     },
-    subEditBtn: (d) => { syncMenuSafe(); MU.sub = d.id; MU.tab = 'submenus'; renderMenuEditor(); },
-    subBack: () => { syncMenuSafe(); MU.sub = null; MU.tab = 'submenus'; renderMenuEditor(); },
+    subEditBtn: (d) => { syncMenuSafe(); MU.sub = d.id; accSet('menu', 'subs', true); renderMenuEditor(); },
+    subBack: () => { syncMenuSafe(); MU.sub = null; accSet('menu', 'subs', true); renderMenuEditor(); },
     subDel: async (d) => {
       if (!(await confirmDlg(t('subDelConfirm'), t('remove')))) return;
       syncMenuSafe();
@@ -2098,6 +2219,7 @@
   };
 
   document.addEventListener('click', (e) => {
+    if (!e.target.closest('.bp-dd') && !e.target.closest('#dd-panel')) ddClose();
     const el = e.target.closest('[data-act]');
     if (!el) return;
     const fn = ACTIONS[el.getAttribute('data-act')];
@@ -2157,16 +2279,24 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { ddClose(); return; }
     if (e.key !== 'Enter') return;
     if (e.target.id === 'pw') { e.preventDefault(); doLogin(); }
     else if (e.target.id === 'user-q') { e.preventDefault(); loadUsers(true); }
   });
+  document.addEventListener('scroll', (e) => {
+    if (!DD.openBox) return;
+    if (e.target instanceof Element && e.target.closest('#dd-panel')) return;
+    ddClose();
+  }, true);
+  window.addEventListener('resize', () => ddClose());
 
   function go(route) {
     if (ROUTES.includes(route)) location.hash = '#/' + route;
   }
   function render() {
     clearTimers();
+    ddClose();
     const h = (location.hash || '').replace(/^#\/?/, '');
     const route = ROUTES.includes(h) ? h : 'dashboard';
     const routeChanged = route !== S.route;
