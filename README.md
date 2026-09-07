@@ -30,7 +30,7 @@ Bilingual (FA/EN) · Production-ready · Fully serverless
 | ![کاربران](assets/screens/users-fa-dark.jpg) | ![نظرسنجی](assets/screens/broadcast-poll-fa-dark.jpg) |
 | **مدیریت کاربران · Users** | **سازنده نظرسنجی تعاملی · Poll builder** |
 | ![ویرایشگر دکمه‌ها](assets/screens/menu-buttons-fa-dark.jpg) | ![تنظیمات](assets/screens/settings-fa-dark.jpg) |
-| **ویرایشگر دکمه با ردیف/ستون + شبیه‌ساز · Button editor + simulator** | **زبان ربات و تنظیمات · Settings** |
+| **ویرایشگر دکمه با ردیف/ستون · Button editor** | **زبان ربات و تنظیمات · Settings** |
 
 ---
 
@@ -103,13 +103,13 @@ Bilingual (FA/EN) · Production-ready · Fully serverless
 | 📢 ارسال پیام/نظرسنجی/عکس | متن + HTML/MarkdownV2 + دکمه‌های URL به **همه، فعال‌ها، کاربران خاص یا کانال/گروه**؛ Rate-Limit قابل تنظیم، پیشرفت زنده، توقف/ادامه، تشخیص خودکار بلاک‌کنندگان ربات |
 | 📊 نظرسنجی تعاملی | سؤال + ۲ تا ۱۰ گزینه با دکمه شیشه‌ای — با هر کلیک **اعداد و نمودار میله‌ای زنده بروزرسانی می‌شوند**؛ امکان تغییر رأی، دکمه بروزرسانی نتایج و مشاهده نتایج در پنل |
 | 🖼 عکس/فایل با واکنش | ارسال عکس (لینک مستقیم) با کپشن + دکمه‌های **👍 لایک / 👎 دیسلایک** با شمارش زنده و امکان برداشتن رأی |
-| ⌨️ سازنده منوی چندلایه | ویرایش پیام‌ها (فا/EN)؛ دکمه‌های شیشه‌ای ۴ نوع: **لینک، کال‌بک، زیرمنو، پاپ‌آپ متن** + **زیرمنوهای تودرتو چندلایه** با **ویرایشگر اختصاصی دکمه‌ها برای هر زیرمنو** + تعیین **ردیف و ستون** هر دکمه و جابه‌جایی با فلش + **شبیه‌ساز زنده قابل کلیک** و ارسال پیش‌نمایش واقعی |
+| ⌨️ سازنده منوی چندلایه | ویرایش پیام‌ها (فا/EN)؛ دکمه‌های شیشه‌ای ۴ نوع: **لینک، کال‌بک، زیرمنو، پاپ‌آپ متن** + **زیرمنوهای تودرتو چندلایه** با **ویرایشگر اختصاصی دکمه‌ها برای هر زیرمنو** + تعیین **ردیف و ستون** هر دکمه و جابه‌جایی با فلش |
 | 🛡 دکمه پشتیبانی همیشگی | با یک کلید، دکمه پشتیبانی **به‌صورت خودکار به همه صفحات منو** (اصلی + همه زیرمنوها) اضافه می‌شود — متن دکمه فا/EN قابل تنظیم است؛ در هر جای دلخواه هم می‌توان دستی اضافه کرد (کال‌بک `support:open`) |
 | 🌍 حالت زبان ربات | **دوزبانه (پیش‌فرض) یا تک‌زبانه** (فقط فارسی / فقط English) — در حالت تک‌زبانه `/lang` و دکمه تغییر زبان غیرفعال می‌شوند و ربات همیشه به زبان انتخابی پاسخ می‌دهد |
 | 🛡 صندوق پشتیبانی دوطرفه | کاربر با `/support` پیام می‌دهد → در پنل می‌رسد (badge خوانده‌نشده) → پاسخ ادمین در تلگرامش تحویل می‌شود؛ بستن تیکت |
 | 🔒 قفل کانال (عضویت اجباری) | تا کاربر عضو نشود ربات فعال نمی‌شود؛ تشخیص با `getChatMember` (کش ۱۵ دقیقه)، دکمه «عضو شدم»، معافیت ادمین‌ها |
 | ⚙️ تنظیمات | توکن ربات (ماسک‌شده)، زبان پیش‌فرض، **قفل کانال**، تنظیم/حذف وب‌هوک با یک کلیک، تیونینگ ارسال |
-| 🌍 پنل دو زبانه | سوئیچ کامل فا/EN با RTL/LTR، حالت تاریک/روشن، موبایل‌فرست با **صفحه ثابت بدون زوم** |
+| 🌍 پنل دو زبانه | سوئیچ کامل فا/EN با RTL/LTR، **۴ تم (تیره / روشن / اقیانوس / بنفش)**، موبایل‌فرست با **صفحه ثابت بدون زوم** |
 | 📱 ریسپانسیو کامل موبایل | **قفل سرریز افقی** (هیچ اسکرول چپ/راستی در هیچ صفحه‌ای وجود ندارد)؛ **جدول کاربران در موبایل به‌صورت کارت‌های تک‌ستونی** با همه اطلاعات (نام، آیدی، زبان، وضعیت، عملیات)؛ اعداد آمار و متن‌های بلند با truncate/break؛ **با تغییر بخش از نوار پایین، صفحه نرم به بالا اسکرول می‌شود**؛ متن‌های رابط کاربری **قابل انتخاب/کپی نیستند** (فیلدهای ورودی استثنا هستند) |
 
 ## 🏗️ معماری
@@ -290,13 +290,13 @@ Webhook accepted only with the secret `X-Telegram-Bot-Api-Secret-Token` header �
 | 📢 Message / Poll / Photo sending | Text + HTML/MarkdownV2 + URL buttons to **everyone, active users, specific users or a channel/group**; tunable rate limiting, live progress |
 | 📊 Interactive polls | Question + 2–10 options with inline buttons — **counts and text bars update live** on every vote, vote changing, refresh button, results in the panel |
 | 🖼 Photo with reactions | Photo (direct URL) with caption + **👍 like / 👎 dislike** buttons, live counters, toggleable votes |
-| ⌨️ Multi-level menu builder | Texts (FA/EN); inline buttons of 4 types (**URL, callback, submenu, text popup**) + **nested multi-level submenus** with a **dedicated button editor per submenu** + exact **row & column placement** with arrow controls + **clickable live simulator** and real preview |
+| ⌨️ Multi-level menu builder | Texts (FA/EN); inline buttons of 4 types (**URL, callback, submenu, text popup**) + **nested multi-level submenus** with a **dedicated button editor per submenu** + exact **row & column placement** with arrow controls |
 | 🛡 Always-on support button | One toggle auto-adds the support button to **every menu page** (root + all submenus) with custom FA/EN labels; it can also be placed manually anywhere (callback `support:open`) |
 | 🌍 Bot language mode | **Bilingual (default) or single-language** (Persian-only / English-only) — in single-language mode `/lang` and the language button are disabled and the bot always replies in the chosen language |
 | 🛡 Two-way support inbox | Users message via `/support` → lands in the panel (unread badge) → admin’s reply is delivered in their Telegram; ticket closing |
 | 🔒 Channel lock (force-subscribe) | The bot stays locked until the user joins your channel; detection via `getChatMember` (15-min cache), “I joined” button, admins exempt |
 | ⚙️ Settings | Bot token (masked), default language, **channel lock**, one-click webhook management |
-| 🌍 Bilingual panel | Full FA/EN with RTL/LTR, dark/light, mobile-first with a **fixed, no-zoom viewport** |
+| 🌍 Bilingual panel | Full FA/EN with RTL/LTR, **4 themes (dark / light / ocean / violet)**, mobile-first with a **fixed, no-zoom viewport** |
 | 📱 Fully responsive mobile | **Horizontal-overflow lock** (no left/right scrolling on any page); the **users table turns into single-column cards on phones** showing every field (name, ID, language, status, actions); long numbers/texts truncate gracefully; **switching sections from the bottom bar smoothly scrolls the page to the top**; UI text is **not selectable/copyable** (form fields excluded) |
 
 ## 🚀 Setup — two methods

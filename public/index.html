@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa" dir="rtl" class="dark">
+<html lang="fa" dir="rtl" class="dark" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -9,10 +9,13 @@
     <script>
     (function () {
       try {
+        var themes = ['dark', 'light', 'ocean', 'violet'];
         var t = localStorage.getItem('bp_theme') || 'dark';
+        if (themes.indexOf(t) < 0) t = 'dark';
         var l = localStorage.getItem('bp_lang') || 'fa';
         var d = document.documentElement;
-        if (t === 'dark') d.classList.add('dark');
+        d.setAttribute('data-theme', t);
+        if (t === 'light') d.classList.remove('dark'); else d.classList.add('dark');
         d.lang = l; d.dir = (l === 'fa') ? 'rtl' : 'ltr';
       } catch (e) {}
     })();
@@ -22,17 +25,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Vazirmatn', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Tahoma', 'sans-serif'] },
-          colors: { brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
-          keyframes: { fadeIn: { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } } },
-          animation: { fadeIn: 'fadeIn .25s ease-out' },
+    (function () {
+      var saved = 'dark';
+      try { saved = localStorage.getItem('bp_theme') || 'dark'; } catch (e) {}
+      var palettes = {
+        ocean: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490' },
+        violet: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
+      };
+      var brand = palettes[saved] || { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' };
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Vazirmatn', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Tahoma', 'sans-serif'] },
+            colors: { brand: brand },
+            keyframes: { fadeIn: { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } } },
+            animation: { fadeIn: 'fadeIn .25s ease-out' },
+          },
         },
-      },
-    };
+      };
+    })();
 </script>
   <style>
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -80,6 +92,85 @@
 
       .bp-utable tbody td[data-c="user"] .text-sm { max-width: 100% !important; }
     }
+
+    /* ===== Panel themes: dark / light / ocean / violet ===== */
+    /* Ocean — deep navy surfaces + cyan accent */
+    html[data-theme="ocean"] body {
+      background: linear-gradient(160deg, #0c2743 0%, #081627 100%) fixed !important;
+      background-color: #0a2036 !important;
+    }
+    html[data-theme="ocean"].dark .dark\:bg-slate-900 { background-color: #0e2a47 !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-900\/95 { background-color: rgb(14 42 71 / .95) !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-950\/85 { background-color: rgb(13 41 70 / .88) !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-800 { background-color: #14385e !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-800\/30 { background-color: rgb(20 56 94 / .3) !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-800\/40 { background-color: rgb(20 56 94 / .4) !important; }
+    html[data-theme="ocean"].dark .dark\:bg-slate-800\/60 { background-color: rgb(20 56 94 / .6) !important; }
+    html[data-theme="ocean"].dark .dark\:hover\:bg-slate-800:hover { background-color: #14385e !important; }
+    html[data-theme="ocean"].dark .dark\:border-slate-800 { border-color: #1a3a5e !important; }
+    html[data-theme="ocean"].dark .dark\:border-slate-700 { border-color: #234b76 !important; }
+    html[data-theme="ocean"].dark .dark\:border-slate-600 { border-color: #2d5d8f !important; }
+    html[data-theme="ocean"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #1a3a5e !important; }
+    html[data-theme="ocean"].dark .bp-utable tbody tr { border-color: #1a3a5e !important; }
+    html[data-theme="ocean"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #1a3a5e !important; }
+    /* Ocean accent fallbacks (also pushed to tailwind.config at runtime) */
+    html[data-theme="ocean"] .bg-brand-500 { background-color: #06b6d4 !important; }
+    html[data-theme="ocean"] .hover\:bg-brand-600:hover { background-color: #0891b2 !important; }
+    html[data-theme="ocean"] .text-brand-500 { color: #22d3ee !important; }
+    html[data-theme="ocean"] .text-brand-600 { color: #06b6d4 !important; }
+    html[data-theme="ocean"] .hover\:text-brand-500:hover { color: #22d3ee !important; }
+    html[data-theme="ocean"].dark .dark\:text-brand-400 { color: #22d3ee !important; }
+    html[data-theme="ocean"] .bg-brand-500\/10 { background-color: rgb(6 182 212 / .1) !important; }
+    html[data-theme="ocean"] .bg-brand-500\/15 { background-color: rgb(6 182 212 / .15) !important; }
+    html[data-theme="ocean"] .\!border-brand-500 { border-color: #06b6d4 !important; }
+    html[data-theme="ocean"] .\!text-brand-500 { color: #06b6d4 !important; }
+    html[data-theme="ocean"] .focus\:border-brand-500:focus { border-color: #06b6d4 !important; }
+    html[data-theme="ocean"] .focus\:ring-brand-500\/40:focus { --tw-ring-color: rgb(6 182 212 / .4) !important; }
+    html[data-theme="ocean"] .accent-brand-500 { accent-color: #06b6d4 !important; }
+    html[data-theme="ocean"] .shadow-brand-500\/25 { --tw-shadow-color: rgb(6 182 212 / .25) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="ocean"] .shadow-brand-500\/30 { --tw-shadow-color: rgb(6 182 212 / .3) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="ocean"] .from-brand-400 { --tw-gradient-from: #22d3ee !important; --tw-gradient-to: rgb(34 211 238 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="ocean"] .from-brand-700 { --tw-gradient-from: #0e7490 !important; --tw-gradient-to: rgb(14 116 144 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="ocean"] .via-brand-500 { --tw-gradient-to: rgb(6 182 212 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #06b6d4, var(--tw-gradient-to) !important; }
+
+    /* Violet — deep purple surfaces + violet accent */
+    html[data-theme="violet"] body {
+      background: linear-gradient(160deg, #241e45 0%, #141127 100%) fixed !important;
+      background-color: #1b1740 !important;
+    }
+    html[data-theme="violet"].dark .dark\:bg-slate-900 { background-color: #231e44 !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-900\/95 { background-color: rgb(35 30 68 / .95) !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-950\/85 { background-color: rgb(32 27 62 / .88) !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-800 { background-color: #2e2952 !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-800\/30 { background-color: rgb(46 41 82 / .3) !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-800\/40 { background-color: rgb(46 41 82 / .4) !important; }
+    html[data-theme="violet"].dark .dark\:bg-slate-800\/60 { background-color: rgb(46 41 82 / .6) !important; }
+    html[data-theme="violet"].dark .dark\:hover\:bg-slate-800:hover { background-color: #2e2952 !important; }
+    html[data-theme="violet"].dark .dark\:border-slate-800 { border-color: #322b58 !important; }
+    html[data-theme="violet"].dark .dark\:border-slate-700 { border-color: #413869 !important; }
+    html[data-theme="violet"].dark .dark\:border-slate-600 { border-color: #55497f !important; }
+    html[data-theme="violet"].dark .dark\:divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #322b58 !important; }
+    html[data-theme="violet"].dark .bp-utable tbody tr { border-color: #322b58 !important; }
+    html[data-theme="violet"].dark .bp-utable tbody td[data-c="actions"] { border-top-color: #322b58 !important; }
+    /* Violet accent fallbacks (also pushed to tailwind.config at runtime) */
+    html[data-theme="violet"] .bg-brand-500 { background-color: #8b5cf6 !important; }
+    html[data-theme="violet"] .hover\:bg-brand-600:hover { background-color: #7c3aed !important; }
+    html[data-theme="violet"] .text-brand-500 { color: #a78bfa !important; }
+    html[data-theme="violet"] .text-brand-600 { color: #8b5cf6 !important; }
+    html[data-theme="violet"] .hover\:text-brand-500:hover { color: #a78bfa !important; }
+    html[data-theme="violet"].dark .dark\:text-brand-400 { color: #a78bfa !important; }
+    html[data-theme="violet"] .bg-brand-500\/10 { background-color: rgb(139 92 246 / .1) !important; }
+    html[data-theme="violet"] .bg-brand-500\/15 { background-color: rgb(139 92 246 / .15) !important; }
+    html[data-theme="violet"] .\!border-brand-500 { border-color: #8b5cf6 !important; }
+    html[data-theme="violet"] .\!text-brand-500 { color: #8b5cf6 !important; }
+    html[data-theme="violet"] .focus\:border-brand-500:focus { border-color: #8b5cf6 !important; }
+    html[data-theme="violet"] .focus\:ring-brand-500\/40:focus { --tw-ring-color: rgb(139 92 246 / .4) !important; }
+    html[data-theme="violet"] .accent-brand-500 { accent-color: #8b5cf6 !important; }
+    html[data-theme="violet"] .shadow-brand-500\/25 { --tw-shadow-color: rgb(139 92 246 / .25) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="violet"] .shadow-brand-500\/30 { --tw-shadow-color: rgb(139 92 246 / .3) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+    html[data-theme="violet"] .from-brand-400 { --tw-gradient-from: #a78bfa !important; --tw-gradient-to: rgb(167 139 250 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="violet"] .from-brand-700 { --tw-gradient-from: #6d28d9 !important; --tw-gradient-to: rgb(109 40 217 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+    html[data-theme="violet"] .via-brand-500 { --tw-gradient-to: rgb(139 92 246 / 0) !important; --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6, var(--tw-gradient-to) !important; }
 </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen">
@@ -124,7 +215,7 @@
       addBtnTitle: 'افزودن دکمه شیشه‌ای', btnsCount: 'دکمه', pageBtns: 'دکمه‌های این صفحه', backToList: 'بازگشت به فهرست زیرمنوها',
       endOfRow: 'آخر ردیف', posHint: 'ستون ۱ = اولین جایگاه ردیف؛ خالی بگذارید تا در انتهای ردیف اضافه شود (حداکثر ۱۰ ردیف و ۸ دکمه در هر ردیف)',
       moveL: 'یک جای به عقب', moveR: 'یک جای به جلو', moveU: 'انتقال به ردیف بالاتر', moveD: 'انتقال به ردیف پایین‌تر',
-      simAlert: 'پاپ‌آپ', channelLock: 'قفل کانال (عضویت اجباری)', chEnable: 'فعال‌سازی — کاربر تا عضو کانال نشود ربات فعال نمی‌شود',
+      channelLock: 'قفل کانال (عضویت اجباری)', chEnable: 'فعال‌سازی — کاربر تا عضو کانال نشود ربات فعال نمی‌شود',
       chId: 'آیدی کانال — مثلاً @mychannel یا -1001234567890', chUrl: 'لینک دعوت سفارشی (اختیاری)',
       chHint: '⚠️ ربات باید ادمین کانال باشد تا عضویت را تشخیص دهد.',
       signIn: 'ورود', signingIn: 'در حال ورود…', loginErr: 'رمز عبور نادرست است',
@@ -169,9 +260,8 @@
       welcomeFa: 'متن فارسی (/start)', welcomeEn: 'متن انگلیسی (/start)', helpFa: 'راهنمای فارسی (/help)', helpEn: 'راهنمای انگلیسی (/help)',
       tplHint: 'متغیرها: {name} نام، {username} یوزرنیم، {id} آیدی',
       btnType: 'نوع', typeUrl: 'لینک', typeCallback: 'کال‌بک', value: 'مقدار', valueUrl: 'https://…', valueCb: 'مثلاً my:action (حداکثر ۶۴ بایت)',
-      simulator: 'شبیه‌ساز ربات', simHint: 'رفتار ربات را با پیکربندی فعلی تست کنید', sendTest: 'ارسال پیش‌نمایش واقعی',
-      chatIdPh: 'آیدی عددی چت (مثلاً خودتان)', testSent: 'پیش‌نمایش ارسال شد', resetDefaults: 'بازنشانی به پیش‌فرض',
-      confirmReset: 'منو به حالت پیش‌فرض بازگردانده شود؟', botReplies: 'ربات', you: 'شما',
+      resetDefaults: 'بازنشانی به پیش‌فرض',
+      confirmReset: 'منو به حالت پیش‌فرض بازگردانده شود؟',
       botSettings: 'تنظیمات ربات', botToken: 'توکن ربات', tokenStored: 'توکن ذخیره‌شده:',
       tokenHint: 'از @BotFather دریافت می‌شود. خالی بگذارید تا تغییر نکند.', tokenMissingWarn: 'هنوز توکنی تنظیم نشده است',
       defaultBotLang: 'زبان پیش‌فرض (کاربران جدید)', broadcastTuning: 'تیونینگ ارسال همگانی',
@@ -182,7 +272,7 @@
       webhookMgmt: 'مدیریت وب‌هوک', setWebhook: 'تنظیم وب‌هوک', delWebhook: 'حذف وب‌هوک',
       confirmDelWh: 'وب‌هوک حذف شود؟ ربات پیام‌ها را دریافت نخواهد کرد.',
       webhookSetOk: 'وب‌هوک با موفقیت تنظیم شد', webhookDelOk: 'وب‌هوک حذف شد',
-      panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تاریک', light: 'روشن', language: 'زبان',
+      panelPrefs: 'تنظیمات پنل', appearance: 'پوسته', dark: 'تیره', light: 'روشن', themeOcean: 'اقیانوس', themeViolet: 'بنفش', language: 'زبان',
       version: 'نسخه',
     },
     en: {
@@ -209,7 +299,7 @@
       addBtnTitle: 'Add inline button', btnsCount: 'buttons', pageBtns: 'Buttons of this page', backToList: 'Back to submenu list',
       endOfRow: 'End of row', posHint: 'Column 1 = first slot of the row; leave empty to append at the end (max 10 rows, 8 buttons per row)',
       moveL: 'Move back one slot', moveR: 'Move forward one slot', moveU: 'Move to the row above', moveD: 'Move to the row below',
-      simAlert: 'Popup', channelLock: 'Channel lock (force-subscribe)', chEnable: 'Enable — the bot stays locked until the user joins',
+      channelLock: 'Channel lock (force-subscribe)', chEnable: 'Enable — the bot stays locked until the user joins',
       chId: 'Channel ID — e.g. @mychannel or -1001234567890', chUrl: 'Custom invite link (optional)',
       chHint: '⚠️ The bot must be an admin of the channel to detect membership.',
       signIn: 'Sign in', signingIn: 'Signing in…', loginErr: 'Incorrect password',
@@ -254,9 +344,8 @@
       welcomeFa: 'Persian text (/start)', welcomeEn: 'English text (/start)', helpFa: 'Persian help (/help)', helpEn: 'English help (/help)',
       tplHint: 'Variables: {name}, {username}, {id}',
       btnType: 'Type', typeUrl: 'URL', typeCallback: 'Callback', value: 'Value', valueUrl: 'https://…', valueCb: 'e.g. my:action (max 64 bytes)',
-      simulator: 'Bot simulator', simHint: 'Test the bot behavior with current configuration', sendTest: 'Send real preview',
-      chatIdPh: 'Numeric chat ID (e.g. yours)', testSent: 'Preview sent', resetDefaults: 'Reset to defaults',
-      confirmReset: 'Reset menu to defaults?', botReplies: 'Bot', you: 'You',
+      resetDefaults: 'Reset to defaults',
+      confirmReset: 'Reset menu to defaults?',
       botSettings: 'Bot settings', botToken: 'Bot token', tokenStored: 'Stored token:',
       tokenHint: 'Get it from @BotFather. Leave empty to keep unchanged.', tokenMissingWarn: 'No token configured yet',
       defaultBotLang: 'Default language (new users)', broadcastTuning: 'Broadcast tuning',
@@ -267,7 +356,7 @@
       webhookMgmt: 'Webhook management', setWebhook: 'Set webhook', delWebhook: 'Delete webhook',
       confirmDelWh: 'Delete the webhook? The bot will stop receiving updates.',
       webhookSetOk: 'Webhook configured successfully', webhookDelOk: 'Webhook deleted',
-      panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', language: 'Language',
+      panelPrefs: 'Panel preferences', appearance: 'Theme', dark: 'Dark', light: 'Light', themeOcean: 'Ocean', themeViolet: 'Violet', language: 'Language',
       version: 'Version',
     },
   };
@@ -382,6 +471,47 @@
     chip: 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium',
   };
   const chip = (color, txt) => `<span class="${CLS.chip} ${color}">${txt}</span>`;
+
+  /* ===== Panel themes: dark / light / ocean / violet ===== */
+  const THEMES = ['dark', 'light', 'ocean', 'violet'];
+  const THEME_META = {
+    dark:   { dark: true,  icon: 'moon',     nameKey: 'dark',        brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
+    light:  { dark: false, icon: 'sun',      nameKey: 'light',       brand: { 400: '#38bdf8', 500: '#2aabee', 600: '#229ed9', 700: '#1c86b8' } },
+    ocean:  { dark: true,  icon: 'waves',    nameKey: 'themeOcean',  brand: { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2', 700: '#0e7490' } },
+    violet: { dark: true,  icon: 'sparkles', nameKey: 'themeViolet', brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' } },
+  };
+  const getTheme = () => {
+    let v = 'dark';
+    try { v = localStorage.getItem('bp_theme') || 'dark'; } catch (e) {}
+    return THEME_META[v] ? v : 'dark';
+  };
+  function applyTheme(name) {
+    if (!THEME_META[name]) name = 'dark';
+    const meta = THEME_META[name];
+    const d = document.documentElement;
+    d.setAttribute('data-theme', name);
+    d.classList.toggle('dark', meta.dark);
+    try { localStorage.setItem('bp_theme', name); } catch (e) {}
+    try {
+      if (window.tailwind && tailwind.config) {
+        const cfg = tailwind.config;
+        const theme = cfg.theme || {};
+        const extend = theme.extend || {};
+        const colors = extend.colors || {};
+        tailwind.config = Object.assign({}, cfg, {
+          theme: Object.assign({}, theme, {
+            extend: Object.assign({}, extend, {
+              colors: Object.assign({}, colors, { brand: Object.assign({}, meta.brand) }),
+            }),
+          }),
+        });
+      }
+    } catch (e) {}
+    const btn = document.querySelector('[data-act="toggleTheme"]');
+    if (btn) btn.innerHTML = '<i data-lucide="' + meta.icon + '" class="w-[18px] h-[18px]"></i>';
+    refreshIcons();
+    try { paintPrefs(); } catch (e) {}
+  }
 
   async function api(path, opts = {}) {
     const headers = { 'Content-Type': 'application/json' };
@@ -609,7 +739,7 @@
       '<div class="md:hidden w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-blue-600 flex items-center justify-center"><i data-lucide="send" class="w-4 h-4 text-white"></i></div>' +
       '<h2 class="font-bold text-base sm:text-lg flex-1 truncate">' + t(S.route) + '</h2>' +
       '<span id="live-pill" class="cursor-default"></span>' +
-      '<button data-act="toggleTheme" title="' + t('appearance') + '" class="' + CLS.iconBtn + '"><i data-lucide="' + (document.documentElement.classList.contains('dark') ? 'sun' : 'moon') + '" class="w-[18px] h-[18px]"></i></button>' +
+      '<button data-act="toggleTheme" title="' + t('appearance') + '" class="' + CLS.iconBtn + '"><i data-lucide="' + THEME_META[getTheme()].icon + '" class="w-[18px] h-[18px]"></i></button>' +
       '<button data-act="toggleLang" title="' + t('language') + '" class="' + CLS.iconBtn + ' text-xs font-extrabold">' + (S.lang === 'fa' ? 'EN' : 'فا') + '</button>' +
       '<button data-act="logout" title="' + t('logout') + '" class="' + CLS.iconBtn + ' md:hidden"><i data-lucide="log-out" class="w-[18px] h-[18px]"></i></button>' +
       '</div></header>' +
@@ -628,11 +758,6 @@
   }
 </script>
   <script>
-
-  const SIM_T = {
-    fa: { unknown: '🤔 متوجه نشدم. برای راهنما /help را بزنید.', chooseLang: '🌍 زبان خود را انتخاب کنید:', yourId: '🆔 آیدی عددی شما: ۵۵۵۰۰۱۲۳۴', pong: '🏓 پونگ! ربات فعال است.', online: 'آنلاین', bot: 'ربات شما', supIntro: '🛡 در حالت گفتگو با پشتیبانی هستید. پیام خود را بنویسید.' },
-    en: { unknown: "🤔 I didn't understand. Send /help for usage.", chooseLang: '🌍 Please choose your language:', yourId: '🆔 Your numeric ID: 555001234', pong: '🏓 Pong! The bot is alive.', online: 'online', bot: 'Your Bot', supIntro: '🛡 You are chatting with support. Send your message.' },
-  };
 
   const loadingRow = (cols) =>
     '<tr><td colspan="' + cols + '" class="py-12 text-center text-slate-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block align-middle me-2"></i>' + t('loading') + '</td></tr>';
@@ -1262,60 +1387,25 @@
   function renderMenu() {
     $('view').innerHTML =
       '<p class="text-sm text-slate-500 -mt-2 mb-4 px-1">' + t('menuHint') + '</p>' +
-      '<div class="grid lg:grid-cols-2 gap-4 items-start">' +
       '<div class="' + CLS.card + ' p-5 md:p-6">' +
       '<div id="menu-editor"></div>' +
       '<div class="flex gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">' +
       '<button data-act="menuSave" class="' + CLS.btnP + '"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button>' +
       '<button data-act="menuReset" class="' + CLS.btnS + '"><i data-lucide="rotate-ccw" class="w-4 h-4"></i>' + t('resetDefaults') + '</button>' +
-      '</div></div>' +
-
-      '<div class="space-y-4">' +
-      '<div class="' + CLS.card + ' overflow-hidden">' +
-      '<div class="p-5 pb-3"><h3 class="font-bold text-sm flex items-center gap-2"><i data-lucide="bot" class="w-4 h-4 text-brand-500"></i>' + t('simulator') + '</h3>' +
-      '<p class="text-[11px] text-slate-400 mt-1">' + t('simHint') + '</p></div>' +
-      '<div class="mx-5 mb-5 rounded-2xl bg-[#17212b] overflow-hidden">' +
-      '<div class="flex items-center gap-3 px-4 py-3 bg-[#232e3c]">' +
-      '<div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-blue-600 flex items-center justify-center"><i data-lucide="bot" class="w-[18px] h-[18px] text-white"></i></div>' +
-      '<div><div class="text-white text-sm font-bold">' + esc(SIM_T[S.lang].bot) + '</div>' +
-      '<div class="text-[10px] text-slate-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>' + esc(SIM_T[S.lang].online) + '</div></div></div>' +
-      '<div id="sim-log" class="p-4 space-y-2.5 h-[300px] overflow-y-auto"></div>' +
-      '<div class="px-4 pb-4 flex flex-wrap gap-2" id="sim-chips">' +
-      ['/start', '/help', '/lang', '/id', '/ping', '/support'].map((c) => '<button data-act="simCmd" data-cmd="' + c + '" class="rounded-full bg-[#2b5278] hover:bg-[#3a6a9c] text-white text-xs font-medium px-3.5 py-1.5 transition" dir="ltr">' + c + '</button>').join('') +
-      '</div></div></div>' +
-      '<div class="' + CLS.card + ' p-5">' +
-      '<h3 class="font-bold text-sm flex items-center gap-2 mb-3"><i data-lucide="flask-conical" class="w-4 h-4 text-brand-500"></i>' + t('sendTest') + '</h3>' +
-      '<div class="flex flex-col sm:flex-row gap-2">' +
-      '<input id="pv-chat" inputmode="numeric" dir="ltr" placeholder="' + t('chatIdPh') + '" class="' + CLS.input + ' flex-1">' +
-      '<button data-act="pvSend" class="' + CLS.btnP + '"><i data-lucide="send" class="w-4 h-4"></i>' + t('send') + '</button></div></div>' +
       '</div></div>';
 
     refreshIcons();
     if (!MU.menu) loadMenu();
-    else { renderMenuEditor(); renderSim(); }
+    else renderMenuEditor();
   }
 
   async function loadMenu() {
     try {
-      const [d, s] = await Promise.all([api('/menu'), api('/settings').catch(() => null)]);
+      const d = await api('/menu');
       MU.menu = d.menu;
       MU.defaults = d.defaults;
-      MU.settings = s ? s.settings : null;
       renderMenuEditor();
-      renderSim();
     } catch (e) { toast(e.message, 'error'); }
-  }
-
-  function simWithSupport(rows) {
-    const sb = MU.settings && MU.settings.supportButton;
-    if (!sb || sb.enabled === false) return rows || [];
-    const has = (rows || []).some((r) => (r || []).some((b) => b && b.type === 'callback' && b.value === 'support:open'));
-    if (has) return rows || [];
-    const text = (S.lang === 'en' ? sb.en : sb.fa) || '🛡 پشتیبانی';
-    return [...(rows || []), [{ text, type: 'callback', value: 'support:open' }]];
-  }
-  function simSingleLang() {
-    return !!(MU.settings && MU.settings.botLangMode && MU.settings.botLangMode !== 'both');
   }
 
   function btnValueEl(b) {
@@ -1502,78 +1592,12 @@
     ).filter((r) => r.length);
   }
 
-  function renderSim() {
-    const log = $('sim-log');
-    if (!log || !MU.menu) return;
-    log.innerHTML = '';
-    simShowPage('root');
-  }
-  function simUser(text) {
-    $('sim-log').insertAdjacentHTML('beforeend',
-      '<div class="flex justify-end"><div class="bg-brand-500 text-white text-[13px] leading-5 rounded-2xl rounded-br-md px-3.5 py-2 max-w-[80%]" dir="auto">' + esc(text) + '</div></div>');
-    simScroll();
-  }
-  function simBot(html) {
-    $('sim-log').insertAdjacentHTML('beforeend',
-      '<div class="flex justify-start"><div class="bg-[#212d3b] text-slate-100 text-[13px] leading-5 rounded-2xl rounded-bl-md px-3.5 py-2 max-w-[85%] whitespace-pre-wrap" dir="auto">' + html + '</div></div>');
-    simScroll();
-  }
-  function simAlert(text) {
-    $('sim-log').insertAdjacentHTML('beforeend',
-      '<div class="flex justify-center my-1"><div class="bg-slate-600/60 text-slate-100 text-[11px] leading-4 rounded-xl px-3 py-2 max-w-[90%] text-center" dir="auto">💬 <b>' + t('simAlert') + '</b><br>' + esc(text) + '</div></div>');
-    simScroll();
-  }
-  function simPills(buttons) {
-    if (!buttons || !buttons.length) return '';
-    const rows = buttons.map((row) =>
-      '<div class="flex gap-1.5 justify-center flex-wrap mt-2">' + row.map((b) =>
-        '<button data-act="simBtn" data-type="' + esc(b.type) + '" data-value="' + esc(b.value) + '" data-text="' + esc(b.text) + '" class="rounded-lg bg-[#2b5278] hover:bg-[#3a6a9c] text-white text-[11px] font-medium px-3 py-1.5 transition">' + esc(b.text || b) + '</button>').join('') + '</div>');
-    return '<div class="mt-1">' + rows.join('') + '</div>';
-  }
-  function simScroll() { const l = $('sim-log'); if (l) l.scrollTop = l.scrollHeight; }
-
-  function simShowPage(pageId) {
-    const m = MU.menu;
-    if (pageId === 'root') {
-      const l = S.lang === 'fa' ? 'fa' : 'en';
-      simBot(esc(m.welcome[l] || m.welcome.fa).replace(/\{name\}/g, 'Admin') + simPills(simWithSupport(m.inlineButtons)));
-    } else {
-      const sm = (m.submenus || {})[pageId];
-      if (!sm) return;
-      simBot('📂 <b>' + esc(sm.title) + '</b>\n' + esc(sm.text) + simPills(simWithSupport(sm.buttons || [])) +
-        '<div class="flex gap-1.5 justify-center flex-wrap mt-2"><button data-act="simBtn" data-type="submenu" data-value="root" class="rounded-lg bg-slate-600/60 hover:bg-slate-500 text-white text-[11px] px-3 py-1.5 transition">⬅️ ' + (S.lang === 'fa' ? 'بازگشت' : 'Back') + '</button></div>');
-    }
-  }
-
-  function simBtnAction(d) {
-    if (d.type === 'submenu') return simShowPage(d.value === 'root' ? 'root' : d.value);
-    if (d.type === 'text') return simAlert(d.value);
-    if (d.type === 'url') return simAlert('🔗 ' + d.value);
-    if (d.value === 'support:open') return simBot('🛡 ' + SIM_T[S.lang].supIntro);
-    if (d.value === 'setlang:menu') return simBot(SIM_T[S.lang].chooseLang + simPills([[{ text: 'فارسی 🇮🇷', type: 'text', value: 'فارسی انتخاب شد' }, { text: 'English 🇬🇧', type: 'text', value: 'English selected' }]]));
-    simBot('⚡ callback: <span dir="ltr">' + esc(d.value) + '</span>');
-  }
-
-  function simReply(cmd) {
-    const st = SIM_T[S.lang];
-    const lang = S.lang === 'fa' ? 'fa' : 'en';
-    const m = MU.menu;
-    if (cmd === '/start') {
-      simShowPage('root');
-    } else if (cmd === '/help') {
-      simBot(esc(m.help[lang] || m.help.fa));
-    } else if (cmd === '/lang') {
-      if (simSingleLang()) simBot('🌍 ' + (S.lang === 'fa' ? 'این ربات فقط به یک زبان پاسخ می‌دهد.' : 'This bot responds in one language only.'));
-      else simBot(st.chooseLang + simPills([[{ text: 'فارسی 🇮🇷', type: 'text', value: 'فارسی انتخاب شد' }, { text: 'English 🇬🇧', type: 'text', value: 'English selected' }]]));
-    } else if (cmd === '/id') {
-      simBot(st.yourId);
-    } else if (cmd === '/ping') {
-      simBot(st.pong);
-    } else if (cmd === '/support') {
-      simBot('🛡 ' + st.supIntro);
-    } else {
-      simBot(st.unknown);
-    }
+  function themeBtn(v, icon, label, bg, accent) {
+    return '<button data-act="setTheme" data-v="' + v + '" class="preftheme ' + CLS.btnS + ' !py-2.5 text-xs !flex-col !gap-1.5">' +
+      '<span class="flex items-center gap-1.5">' +
+      '<span class="w-6 h-6 rounded-lg border border-black/20 dark:border-white/20" style="background:' + bg + '"></span>' +
+      '<span class="w-6 h-6 rounded-lg" style="background:' + accent + '"></span></span>' +
+      '<span class="flex items-center gap-1 font-bold"><i data-lucide="' + icon + '" class="w-3.5 h-3.5"></i>' + label + '</span></button>';
   }
   function renderSettings() {
     $('view').innerHTML =
@@ -1636,11 +1660,14 @@
       '<button data-act="saveTuning" class="' + CLS.btnS + ' mt-4"><i data-lucide="save" class="w-4 h-4"></i>' + t('save') + '</button></div>' +
       '<div class="' + CLS.card + ' p-5 md:p-6">' +
       '<h3 class="font-bold text-sm flex items-center gap-2 mb-4"><i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-500"></i>' + t('panelPrefs') + '</h3>' +
-      '<div class="grid grid-cols-2 gap-4">' +
+      '<div class="space-y-4">' +
       '<div><span class="' + CLS.label + '">' + t('appearance') + '</span>' +
-      '<div class="flex gap-2">' +
-      '<button data-act="setTheme" data-v="dark" class="preftheme ' + CLS.btnS + ' flex-1 !py-2 text-xs"><i data-lucide="moon" class="w-3.5 h-3.5"></i>' + t('dark') + '</button>' +
-      '<button data-act="setTheme" data-v="light" class="preftheme ' + CLS.btnS + ' flex-1 !py-2 text-xs"><i data-lucide="sun" class="w-3.5 h-3.5"></i>' + t('light') + '</button></div></div>' +
+      '<div class="grid grid-cols-2 gap-2">' +
+      themeBtn('dark', 'moon', t('dark'), '#020617', '#2aabee') +
+      themeBtn('light', 'sun', t('light'), '#f1f5f9', '#2aabee') +
+      themeBtn('ocean', 'waves', t('themeOcean'), '#0a2036', '#06b6d4') +
+      themeBtn('violet', 'sparkles', t('themeViolet'), '#1b1740', '#8b5cf6') +
+      '</div></div>' +
       '<div><span class="' + CLS.label + '">' + t('language') + '</span>' +
       '<div class="flex gap-2">' +
       '<button data-act="setLang" data-v="fa" class="preflang ' + CLS.btnS + ' flex-1 !py-2 text-xs">فارسی</button>' +
@@ -1681,8 +1708,9 @@
   }
 
   function paintPrefs() {
+    const cur = getTheme();
     document.querySelectorAll('.preftheme').forEach((b) => {
-      const on = (b.dataset.v === 'dark') === document.documentElement.classList.contains('dark');
+      const on = b.dataset.v === cur;
       b.classList.toggle('!border-brand-500', on);
       b.classList.toggle('!text-brand-500', on);
     });
@@ -1706,19 +1734,11 @@
     dashRefresh: () => loadDashboard(),
 
     toggleTheme: () => {
-      const dark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('bp_theme', dark ? 'dark' : 'light');
-      const btn = document.querySelector('[data-act="toggleTheme"]');
-      if (btn) btn.innerHTML = '<i data-lucide="' + (dark ? 'sun' : 'moon') + '" class="w-[18px] h-[18px]"></i>';
-      refreshIcons(); paintPrefs();
+      const next = THEMES[(THEMES.indexOf(getTheme()) + 1) % THEMES.length];
+      applyTheme(next);
     },
     setTheme: (d) => {
-      const dark = d.v === 'dark';
-      document.documentElement.classList.toggle('dark', dark);
-      localStorage.setItem('bp_theme', d.v);
-      const btn = document.querySelector('[data-act="toggleTheme"]');
-      if (btn) btn.innerHTML = '<i data-lucide="' + (dark ? 'sun' : 'moon') + '" class="w-[18px] h-[18px]"></i>';
-      refreshIcons(); paintPrefs();
+      applyTheme(d.v);
     },
     toggleLang: () => ACTIONS.setLang({ v: S.lang === 'fa' ? 'en' : 'fa' }),
     setLang: (d) => {
@@ -1777,7 +1797,7 @@
     menuTab: (d) => { syncMenuSafe(); MU.tab = d.tab; MU.sub = null; renderMenuEditor(); },
     menuSave: async () => {
       syncMenuSafe();
-      try { await api('/menu', { method: 'PUT', body: MU.menu }); toast(t('saved'), 'success'); renderSim(); }
+      try { await api('/menu', { method: 'PUT', body: MU.menu }); toast(t('saved'), 'success'); }
       catch (e) { toast(e.message, 'error'); }
     },
     menuReset: async () => {
@@ -1785,7 +1805,7 @@
       MU.menu = JSON.parse(JSON.stringify(MU.defaults));
       MU.sub = null;
       try { await api('/menu', { method: 'PUT', body: MU.menu }); toast(t('saved'), 'success'); } catch (e) {}
-      renderMenuEditor(); renderSim();
+      renderMenuEditor();
     },
     ibDelBtn: (d) => {
       syncMenuSafe();
@@ -1852,17 +1872,6 @@
       for (const sm of Object.values(MU.menu.submenus)) sm.buttons = strip(sm.buttons || []);
       MU.sub = null;
       renderMenuEditor();
-    },
-
-    simCmd: (d) => { syncMenuSafe(); simUser(d.cmd); setTimeout(() => simReply(d.cmd), 380); },
-    simBtn: (d) => { syncMenuSafe(); simBtnAction(d); },
-    pvSend: async () => {
-      const chatId = Number(($('pv-chat').value || '').replace(/[^\d-]/g, ''));
-      if (!chatId) { toast(t('chatIdPh'), 'info'); return; }
-      try {
-        await api('/menu/preview', { method: 'POST', body: { chatId } });
-        toast(t('testSent'), 'success');
-      } catch (e) { toast(e.message, 'error'); }
     },
 
     saveGeneral: async () => {
